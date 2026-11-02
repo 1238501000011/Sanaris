@@ -100,11 +100,12 @@ export async function startDevServer(root, args) {
 
   let server;
   try {
-    // Repeated starts avoid loading Vite, SQLite, or a second copy of the API.
-    const { createServer } = await import('vite');
-    server = await createServer({ root, configFile: resolve(root, 'vite.config.js'), clearScreen: false,
-      server: { host: '127.0.0.1', port: options.port, strictPort: true, open: false } });
-    await server.listen();
+    // The frontend is already browser-ready; no bundler or compiler is needed.
+    const { createApplication } = await import('../server/application.js');
+    server = createApplication({ root, databasePath, development: true,
+      allowedOrigins: (process.env.SANARIS_ALLOWED_ORIGINS || '').split(',').map(value => value.trim()),
+      initialPassword: process.env.SANARIS_INITIAL_ADMIN_PASSWORD || '' });
+    await server.listen(options.port);
   } catch (error) {
     await server?.close();
     // Another IDE may have finished starting the same project after the first check.

@@ -4,8 +4,12 @@ import { openComplaintStore, publicStatus, RequestError } from './complaints.js'
 const cookieName = 'sanaris_admin';
 const sessionLifetime = 8 * 60 * 60 * 1000;
 
-export function createApi({ databasePath }) {
+export function createApi({ databasePath, allowedOrigins = [], initialPassword = '' }) {
   const store = openComplaintStore(databasePath);
+  if (initialPassword && !store.configured()) store.setPassword(initialPassword);
+  const origins = new Set(allowedOrigins.filter(origin => {
+    try { const url = new URL(origin); return ['https:', 'http:'].includes(url.protocol) && url.origin === origin; } catch { return false; }
+  }));
   const sessions = new Map();
   const streams = new Set();
   const rateLimits = new Map();
@@ -21,6 +25,8 @@ export function createApi({ databasePath }) {
   heartbeat.unref();
 
   function tokenFor(request) {
+    const bearer = request.headers.authorization?.match(/^Bearer ([a-f0-9]{64})$/i);
+    if (bearer) return bearer[1];
     return request.headers.cookie?.split(';').map(value => value.trim()).find(value => value.startsWith(`${cookieName}=`))?.slice(cookieName.length + 1);
   }
   function authenticated(request) { return (sessions.get(tokenFor(request)) ?? 0) > Date.now(); }
@@ -48,6 +54,7 @@ export function createApi({ databasePath }) {
     const token = randomBytes(32).toString('hex');
     sessions.set(token, Date.now() + sessionLifetime);
     response.setHeader('Set-Cookie', `${cookieName}=${token}; HttpOnly; SameSite=Strict; Path=/api/admin; Max-Age=28800${request.socket.encrypted ? '; Secure' : ''}`);
+    return request.headers['x-sanaris-auth'] === 'bearer' ? { authenticated: true, token } : { authenticated: true };
   }
   function openStream(request, response, options) {
     response.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache, no-transform', 'Connection': 'keep-alive', 'X-Accel-Buffering': 'no' });
@@ -68,23 +75,33 @@ export function createApi({ databasePath }) {
     const pathname = url.pathname;
     if (!pathname.startsWith('/api/')) return next();
     try {
-      if (request.headers['sec-fetch-site'] === 'cross-site') throw new RequestError('Cross-site requests are not allowed.', 403);
-      if (!['GET', 'HEAD'].includes(request.method) && request.headers.origin && new URL(request.headers.origin).host !== request.headers.host) throw new RequestError('This request came from another website.', 403);
+      const origin = request.headers.origin;
+      const approved = origin && origins.has(origin);
+      const sameOrigin = origin && new URL(origin).host === request.headers.host;
+      if (approved) {
+        response.setHeader('Access-Control-Allow-Origin', origin);
+        response.setHeader('Vary', 'Origin');
+        response.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, OPTIONS');
+        response.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Idempotency-Key, X-SANARIS-Auth');
+        response.setHeader('Access-Control-Max-Age', '600');
+      }
+      if (origin && !sameOrigin && !approved) throw new RequestError('This website is not allowed to use the report service.', 403);
+      if (request.headers['sec-fetch-site'] === 'cross-site' && !approved) throw new RequestError('Cross-site requests are not allowed.', 403);
+      if (request.method === 'OPTIONS') { response.writeHead(204); response.end(); return; }
+      if (pathname === '/api/health' && request.method === 'GET') return json(response, 200, { service: 'sanaris', status: 'ok' });
       if (pathname === '/api/admin/session' && request.method === 'GET') return json(response, 200, { authenticated: authenticated(request), setupRequired: !store.configured() });
       if (pathname === '/api/admin/setup' && request.method === 'POST') {
         rateLimit(request, 'auth', 10);
-        if (!['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(request.socket.remoteAddress)) throw new RequestError('Create the admin password on the server computer.', 403);
+        if (!['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(request.socket.remoteAddress) || approved || request.headers['x-forwarded-for']) throw new RequestError('Create the admin password on the server computer or configure it in the backend hosting settings.', 403);
         const data = await body(request);
         store.setPassword(data?.password);
-        createSession(request, response);
-        return json(response, 201, { authenticated: true });
+        return json(response, 201, createSession(request, response));
       }
       if (pathname === '/api/admin/login' && request.method === 'POST') {
         rateLimit(request, 'auth', 10);
         const data = await body(request);
         if (!store.verifyPassword(data?.password)) throw new RequestError('The admin password is incorrect.', 401);
-        createSession(request, response);
-        return json(response, 200, { authenticated: true });
+        return json(response, 200, createSession(request, response));
       }
       if (pathname.startsWith('/api/admin/')) {
         if (!authenticated(request)) throw new RequestError('Sign in to the admin dashboard.', 401);

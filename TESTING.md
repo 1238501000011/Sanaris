@@ -65,3 +65,15 @@
 - Both `npm run dev` and `Start-SANARIS.cmd --no-open` succeeded against the existing server on port 5173. The Windows launcher was invoked from the parent directory to verify it locates its own project folder.
 - The production build passed with both admin and resident entry points after the startup changes.
 - The SQLite experimental warning remains informational on first startup with Node 24.11. No warnings were globally suppressed, and no unrelated process was stopped.
+
+## Admin access and resident usability — 2026-11-02
+
+- The final production build passed with separate admin and resident bundles. Desktop screenshots are saved in the ignored `screenshots/` folder.
+- All 21 Node tests passed, including new client validation checks for missing/overlong details, supported categories, consent, local incident times, future dates, and reference formats.
+- The admin sign-in, report form, receipt and tracking screens were inspected in the browser. The admin login fits a 320px viewport; the resident form fits 320px, 390px and 768px viewports without horizontal overflow. Resident text inputs render at 16px and primary actions provide at least 48px of height. No physical phone was tested.
+- An isolated server/database verified show/hide password, incorrect-password feedback, successful sign-in and sign-out. No real admin credentials were changed.
+- Required-field errors identify the field and focus the first invalid control. Switching to tracking and back preserved the draft location. Noise category selection, the current-time shortcut, confirmation checkbox and help accordion worked.
+- A forced HTTP 503 preserved the form and showed a retry message. Retrying stored one test report, displayed a receipt and updated the already-open admin inbox automatically. Copying the reference and downloading the receipt worked; the test download contains only its reference, submission time and initial status.
+- The receipt's tracking link prefilled the reference and loaded its status. Resolving the report in the admin inbox updated the open resident tracker without a reload. Reloading the tracking URL retained the lookup and resolved status.
+- Browser console checks after navigation showed no application errors or warnings. An expected HTTP 503 was introduced only on the isolated test server to exercise submission recovery.
+- Test reports were kept in a separate temporary database, which was removed after the isolated test server stopped. The application remains locally hosted; access from residents' other devices still requires a network/hosting setup.

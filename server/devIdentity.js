@@ -27,5 +27,5 @@ export function devIdentity(root, databasePath) {
     .update(canonicalPath(root) + '\0' + canonicalPath(databasePath))
     .digest('hex');
   // Identify the installation without returning filesystem paths or report data.
-  return { app: 'SANARIS', service: 'development', protocol: 1, fingerprint };
+  return { app: 'SANARIS', service: 'development', protocol: 2, fingerprint };
 }

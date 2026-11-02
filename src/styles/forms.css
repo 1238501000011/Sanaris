@@ -1,0 +1,12 @@
+.form-field { min-width: 0; display: grid; gap: 8px; }
+.form-field label { color: #243b57; font-size: 14px; font-weight: 600; line-height: 1.5; }
+.form-field input, .form-field select, .form-field textarea { width: 100%; min-height: 50px; padding: 13px 15px; border: 1px solid #cbd7e6; border-radius: 10px; font-size: 16px; line-height: 1.5; color: #152c4b; background: #fff; }
+.form-field input::placeholder, .form-field textarea::placeholder { color: #77869a; opacity: 1; }
+.form-field input[aria-invalid=true], .form-field textarea[aria-invalid=true] { border-color: #ba3d50; }
+.field-hint { color: #62748b; font-size: 12px; line-height: 1.65; font-weight: 400; }
+.field-error { color: #a12f43; font-size: 13px; line-height: 1.5; }
+.form-notice { display: flex; align-items: flex-start; gap: 10px; padding: 13px 15px; border: 1px solid #f0cbd1; border-radius: 10px; background: #fff4f5; color: #a12f43; font-size: 13px; line-height: 1.6; }
+.form-notice svg { flex: 0 0 auto; margin-top: 1px; }
+.ui-spinner { animation: ui-spin 1s linear infinite; }
+@keyframes ui-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .ui-spinner { animation: none; } }

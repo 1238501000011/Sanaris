@@ -60,6 +60,8 @@ Open `http://127.0.0.1:4173/` for admin or `http://127.0.0.1:4173/resident/` for
 - Automatic report updates via server-sent events with a 15-second refresh fallback. New reports update the admin overview and sidebar count. Admin status changes update an open resident tracker.
 - Admin password setup/sign-in, an eight-hour HttpOnly session, protected complaint-list/status APIs, input validation, and request rate limits. Public tracking exposes the reference/status/history without the report description or location.
 - Responsive sidebar, mobile navigation, single-column resident forms and explicit sensor connection states.
+- Responsive admin sign-in with a balanced desktop layout, compact mobile layout, password visibility controls, and clear connection/sign-in feedback.
+- Resident services with prominent report/track navigation, selectable noise categories, a current-time shortcut, field-specific validation, and form details retained when switching tabs or retrying a failed submission. Confirmation includes copyable references, a downloadable receipt, and a tracking link that works after refreshing the page.
 
 ## Project structure
 
@@ -76,6 +78,10 @@ src/
     GoogleMonitoringMap.jsx Google Maps, accessible station markers and popups
     MapSettings.jsx         Google Cloud setup instructions
     AdminAccess.jsx         Admin password setup and sign-in
+    FormControls.jsx        Accessible shared fields, notices and password controls
+    ResidentHelp.jsx        Reporting steps and expandable resident help
+    ReportReceipt.jsx       Confirmation, reference copying and receipt download
+    ReportTracker.jsx       Reference search and live status timeline
     ComplaintInbox.jsx      Shared complaint management and legacy import
     Brand.jsx               Shared SANARIS branding
     Charts.jsx              Recharts trend and classification charts
@@ -90,7 +96,13 @@ src/
     useSensorFeed.js        Optional gateway polling and connection state
     complaintsApi.js        HTTP requests and error handling
     useComplaints.js        Admin session, shared inbox and live updates
+    useReportTracking.js    Resident status updates through SSE and polling
+    residentForm.js         Resident input validation and local date/time helper
     store.jsx               Admin state and local assessment settings
+  styles/
+    forms.css               Shared readable form controls and feedback
+    access.css              Responsive admin sign-in layout
+    resident.css            Resident reporting, receipt and tracking layouts
 resident/index.html         Independent resident website entry
 Start-SANARIS.cmd           Windows launcher for the app and shared API
 scripts/check-runtime.mjs   Node.js compatibility check before development
