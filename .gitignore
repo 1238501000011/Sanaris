@@ -35,6 +35,10 @@ credentials/
 *.db
 *.db-*
 *.sql
+!supabase/migrations/*.sql
+!supabase/tests/*.sql
+supabase/.temp/
+supabase/.branches/
 *.csv
 *.tsv
 *sanaris-complaints*.json

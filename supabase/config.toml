@@ -1,0 +1,5 @@
+project_id = "sanaris"
+
+[functions.sanaris-api]
+# Resident endpoints are public. The handler verifies Auth users and admin membership.
+verify_jwt = false

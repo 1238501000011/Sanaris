@@ -3,7 +3,9 @@ export { config };
 let token = '';
 export function setToken(value) { token = typeof value === 'string' ? value : ''; }
 export function apiUrl(path) {
-  const base = config.apiBase?.trim() ? new URL(config.apiBase.replace(/\/?$/, '/')) : new URL('/', location.href);
+  const local = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+  const configured = config.apiBase?.trim() || (!local ? config.cloudApiBase?.trim() : '');
+  const base = configured ? new URL(configured.replace(/\/?$/, '/')) : new URL('/', location.href);
   if (!['http:', 'https:'].includes(base.protocol) || base.username || base.password) throw new Error('The report service address is not configured correctly.');
   if (location.protocol === 'https:' && base.protocol !== 'https:') throw new Error('The report service needs a secure HTTPS address.');
   return new URL(path.replace(/^\//, ''), base);

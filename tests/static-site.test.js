@@ -12,7 +12,7 @@ test('plain entry pages and browser modules load without a bundler; private file
   const { port } = await app.listen(0);
   const base = 'http://127.0.0.1:' + port;
   try {
-    for (const pathname of ['/']) {
+    for (const pathname of ['/', '/resident/']) {
       const response = await fetch(base + pathname);
       assert.equal(response.status, 200);
       const html = await response.text();
@@ -23,7 +23,7 @@ test('plain entry pages and browser modules load without a bundler; private file
         assert.equal(asset.status, 200, match[1]);
       }
     }
-    for (const filename of ['admin', 'api', 'model', 'ui']) {
+    for (const filename of ['admin', 'resident', 'api', 'model', 'ui']) {
       const response = await fetch(base + '/assets/js/' + filename + '.js');
       assert.equal(response.status, 200);
       assert.match(response.headers.get('content-type'), /javascript/);
@@ -31,7 +31,8 @@ test('plain entry pages and browser modules load without a bundler; private file
     for (const pathname of ['/.env.local', '/data/sanaris.sqlite', '/server/api.js', '/.git/config', '/assets/..%2f..%2fserver/api.js', '/..%5cserver%5capi.js']) {
       assert.equal((await fetch(base + pathname)).status, 404, pathname);
     }
-    assert.equal((await fetch(base + '/docs/', { redirect: 'manual' })).headers.get('location'), '/');
+    assert.equal((await fetch(base + '/resident', { redirect: 'manual' })).headers.get('location'), '/resident/');
+    assert.equal((await fetch(base + '/docs/resident/', { redirect: 'manual' })).headers.get('location'), '/resident/');
     assert.deepEqual(await (await fetch(base + '/api/health')).json(), { service: 'sanaris', status: 'ok' });
   } finally { await app.close(); }
 });

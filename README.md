@@ -1,6 +1,6 @@
 # SANARIS — Community Noise Monitoring
 
-SANARIS uses **plain HTML, CSS, and browser JavaScript**. There is no React, JSX, Vite, Tailwind, or npm frontend dependency. The browser-ready website is in `docs/`; GitHub Pages can publish that folder directly. A separate Node.js/SQLite backend keeps resident reports shared across devices and protects the admin inbox.
+SANARIS uses **plain HTML, CSS, and browser JavaScript**. There is no React, JSX, Vite, Tailwind, or npm frontend dependency. The browser-ready website is in `docs/`; GitHub Pages can publish that folder directly. A separate backend keeps resident reports shared across devices and protects the admin inbox: Node.js/SQLite locally, or Supabase for GitHub Pages.
 
 The admin and resident sites have separate entry points. Residents need no account. No sensor readings are generated: stations wait for a configured hardware feed. The default high classification starts at **45 dB(A)**. The map is centered on Hinabangan, Samar; the four station positions are illustrative until surveyed.
 
@@ -159,3 +159,10 @@ OpenStreetMap/Leaflet works by default. To use Google Maps, enable Maps JavaScri
 ## Verification
 
 See `TESTING.md` for automated and browser checks. Tests use isolated temporary/in-memory databases and do not modify the real resident database. A source-only backup of the previous React version is retained locally under ignored `.npm-cache/react-migration-backup/`.
+
+## Supabase hosting setup
+
+For the prepared Supabase backend and restored admin/resident interfaces, follow
+[SUPABASE-SETUP.md](SUPABASE-SETUP.md). The cloud database and Edge Function are deployed; create the administrator
+account as described in that guide. Local Node/SQLite mode
+continues to work independently.

@@ -15,11 +15,9 @@ test('GitHub Pages origin uses preflight, bearer admin access, shared reporting,
   const server = createServer(api.handle);
   server.listen(0, '127.0.0.1'); await once(server, 'listening');
   const base = 'http://127.0.0.1:' + server.address().port;
-  const request = (path, { method = 'GET', data, headers = {} } = {}) => fetch(base + path, {
-    method,
+  const request = (path, { method = 'GET', data, headers = {} } = {}) => fetch(base + path, { method,
     headers: { Origin: origin, 'Sec-Fetch-Site': 'cross-site', ...(data ? { 'Content-Type': 'application/json' } : {}), ...headers },
-    body: data ? JSON.stringify(data) : undefined
-  });
+    body: data ? JSON.stringify(data) : undefined });
   try {
     const preflight = await request('/api/admin/login', { method: 'OPTIONS', headers: { 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'content-type,x-sanaris-auth' } });
     assert.equal(preflight.status, 204);
@@ -28,8 +26,26 @@ test('GitHub Pages origin uses preflight, bearer admin access, shared reporting,
     const rejected = await request('/api/admin/session', { headers: { Origin: 'https://unrelated.example' } });
     assert.equal(rejected.status, 403);
     assert.equal(rejected.headers.has('access-control-allow-origin'), false);
-    const inbox = await (await request('/api/admin/complaints')).json();
-    assert.equal(inbox.length, 0);
+    assert.equal((await request('/api/admin/setup', { method: 'POST', data: { password: 'No remote setup allowed' } })).status, 403);
+    assert.equal((await request('/api/admin/complaints')).status, 401);
+    const login = await request('/api/admin/login', { method: 'POST', data: { password: 'Isolated API test password 42' }, headers: { 'X-SANARIS-Auth': 'bearer' } });
+    assert.equal(login.status, 200);
+    const { token } = await login.json(); assert.match(token, /^[a-f0-9]{64}$/);
+    const authorization = { Authorization: 'Bearer ' + token };
+    assert.deepEqual(await (await request('/api/admin/session', { headers: authorization })).json(), { authenticated: true, setupRequired: false });
+    const data = { location: 'Isolated test location', category: 'Other', description: 'Cross-origin report integration test.', incidentAt: new Date().toISOString() };
+    const key = randomUUID();
+    const receipt = await (await request('/api/complaints', { method: 'POST', data, headers: { 'Idempotency-Key': key } })).json();
+    const duplicate = await (await request('/api/complaints', { method: 'POST', data, headers: { 'Idempotency-Key': key } })).json();
+    assert.equal(duplicate.id, receipt.id);
+    const inbox = await (await request('/api/admin/complaints', { headers: authorization })).json();
+    assert.equal(inbox.length, 1); assert.equal(inbox[0].description, data.description);
+    assert.equal((await request('/api/admin/complaints/' + receipt.id, { method: 'PATCH', data: { status: 'Resolved' }, headers: authorization })).status, 200);
+    const tracking = await (await request('/api/complaints/' + receipt.id)).json();
+    assert.equal(tracking.status, 'Resolved'); assert.equal(tracking.updates.length, 2);
+    assert.equal('location' in tracking || 'description' in tracking || 'token' in tracking, false);
+    assert.equal((await request('/api/admin/logout', { method: 'POST', headers: authorization })).status, 200);
+    assert.equal((await request('/api/admin/complaints', { headers: authorization })).status, 401);
     assert.equal((await request('/api/admin/session', { headers: { Origin: 'null' } })).status, 403);
   } finally { api.close(); server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }
 });

@@ -96,7 +96,7 @@ export function createApi({ databasePath, allowedOrigins = [], initialPassword =
       if (request.headers['sec-fetch-site'] === 'cross-site' && !approved) throw new RequestError('Cross-site requests are not allowed.', 403);
       if (request.method === 'OPTIONS') { response.writeHead(204); response.end(); return; }
       if (pathname === '/api/health' && request.method === 'GET') return json(response, 200, { service: 'sanaris', status: 'ok' });
-      if (pathname === '/api/admin/session' && request.method === 'GET') return json(response, 200, { authenticated: true, setupRequired: false });
+      if (pathname === '/api/admin/session' && request.method === 'GET') return json(response, 200, { authenticated: authenticated(request), setupRequired: !store.configured() });
       if (pathname === '/api/admin/setup' && request.method === 'POST') {
         rateLimit(request, 'auth', 10);
         if (!['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(request.socket.remoteAddress) || approved || request.headers['x-forwarded-for']) throw new RequestError('Create the admin password on the server computer or configure it in the backend hosting settings.', 403);
@@ -105,14 +105,22 @@ export function createApi({ databasePath, allowedOrigins = [], initialPassword =
         return json(response, 201, createSession(request, response));
       }
       if (pathname === '/api/admin/login' && request.method === 'POST') {
-        return json(response, 200, { authenticated: true });
+        rateLimit(request, 'auth', 10);
+        const data = await body(request);
+        if (!store.verifyPassword(data?.password)) throw new RequestError('The admin password is incorrect.', 401);
+        return json(response, 200, createSession(request, response));
       }
       if (pathname.startsWith('/api/admin/')) {
+        if (!authenticated(request)) throw new RequestError('Sign in to the admin dashboard.', 401);
         if (pathname === '/api/admin/logout' && request.method === 'POST') {
-          return json(response, 200, { authenticated: true });
+          const token = tokenFor(request);
+          sessions.delete(token);
+          for (const stream of streams) if (stream.token === token) { stream.response.end(); streams.delete(stream); }
+          response.setHeader('Set-Cookie', `${cookieName}=; HttpOnly; SameSite=Strict; Path=/api/admin; Max-Age=0`);
+          return json(response, 200, { authenticated: false });
         }
         if (pathname === '/api/admin/complaints' && request.method === 'GET') return json(response, 200, store.list());
-        if (pathname === '/api/admin/complaints/events' && request.method === 'GET') return openStream(request, response, {});
+        if (pathname === '/api/admin/complaints/events' && request.method === 'GET') return openStream(request, response, { token: tokenFor(request) });
         if (pathname === '/api/admin/complaints/import' && request.method === 'POST') {
           const count = store.importReports((await body(request))?.reports);
           publish();
@@ -125,8 +133,20 @@ export function createApi({ databasePath, allowedOrigins = [], initialPassword =
           return json(response, 200, item);
         }
       }
-      // Resident-facing submission and tracking endpoints removed.
-      // Complaints are managed exclusively through the admin dashboard.
+      if (pathname === '/api/complaints' && request.method === 'POST') {
+        rateLimit(request, 'submit', 20);
+        const result = store.submit(await body(request), request.headers['idempotency-key']);
+        if (result.created) publish(result.item.id);
+        return json(response, result.created ? 201 : 200, publicStatus(result.item));
+      }
+      const tracking = pathname.match(/^\/api\/complaints\/(SAN-\d{4}-[A-F0-9]{12,24})(\/events)?$/);
+      if (tracking && request.method === 'GET') {
+        rateLimit(request, 'track', 120);
+        const item = store.find(tracking[1]);
+        if (!item) throw new RequestError('No report found. Check your reference number.', 404);
+        if (tracking[2]) return openStream(request, response, { id: item.id });
+        return json(response, 200, publicStatus(item));
+      }
       return json(response, 404, { error: 'Not found.' });
     } catch (error) {
       if (!response.headersSent) json(response, error instanceof RequestError ? error.status : 500, { error: error instanceof RequestError ? error.message : 'The report service could not complete this request. Please try again.' });
