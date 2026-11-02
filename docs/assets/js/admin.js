@@ -8,55 +8,17 @@ import { createMonitoringMap } from './monitoringMap.js';
 const root = document.getElementById('app');
 const routes = [['overview', 'Overview', 'grid'], ['map', 'Monitoring map', 'pin'], ['events', 'Event history', 'clock'], ['alerts', 'Disturbance alerts', 'bell'], ['analytics', 'Noise analytics', 'chart'], ['complaints', 'Resident complaints', 'message'], ['settings', 'Assessment settings', 'settings']];
 function saved(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } }
-const state = { settings: migrateSettings(saved('sanaris-settings', defaults)), session: null, sessionError: '', samples: [], unavailable: false, complaints: [], loading: true, error: '', selected: 'ESP-02', range: 60, nodeFilter: 'All', levelFilter: 'All', search: '', statusFilter: 'All', acknowledged: new Set(), pending: null };
+const demoComplaints = [
+  { id: 'SAN-2026-A1B2C3D4E5F6', category: 'Amplified music', location: 'Barangay Hall Plaza', description: 'Loud sound system past permitted ordinance hours.', incidentAt: new Date(Date.now() - 3600000).toISOString(), createdAt: new Date(Date.now() - 3600000).toISOString(), status: 'Submitted', updates: [] },
+  { id: 'SAN-2026-F6E5D4C3B2A1', category: 'Construction', location: 'Poblacion Commercial Zone', description: 'Heavy drilling and equipment noise during early morning.', incidentAt: new Date(Date.now() - 7200000).toISOString(), createdAt: new Date(Date.now() - 7200000).toISOString(), status: 'Under review', updates: [] },
+  { id: 'SAN-2026-C3D4E5F6A1B2', category: 'Vehicle noise', location: 'National Highway Crossing', description: 'Modified motorcycle exhaust noise exceeding legal limits.', incidentAt: new Date(Date.now() - 10800000).toISOString(), createdAt: new Date(Date.now() - 10800000).toISOString(), status: 'In progress', updates: [] }
+];
+const state = { settings: migrateSettings(saved('sanaris-settings', defaults)), session: { authenticated: true }, sessionError: '', samples: [], unavailable: false, complaints: saved('sanaris-complaints', demoComplaints), loading: false, error: '', selected: 'ESP-02', range: 60, nodeFilter: 'All', levelFilter: 'All', search: '', statusFilter: 'All', acknowledged: new Set(), pending: null };
 let map, reports, sensorTimer, sensorAbort, sensorVersion = 0;
 const page = () => location.hash.split('/')[2] || 'overview';
 const readings = () => stationReadings(state.samples, Date.now(), state.unavailable);
 const feedStatus = () => state.unavailable ? 'Sensor feed unavailable' : readings().some(node => node.status === 'Recent') ? 'Recent station measurements' : state.samples.length ? 'Awaiting fresh sensor data' : 'Awaiting sensor data';
 function put(id, html) { const target = document.getElementById(id); if (target) target.innerHTML = html; }
-function passwordField(id, label, setup) {
-  return field({ id, label, hint: setup && id === 'password' ? 'Use at least 12 characters. Keep this password for future sign-ins.' : '', control: `<div class="password-control">${icon('lock', 18)}<input id="${id}" name="${id}" type="password" required minlength="${setup ? 12 : 1}" maxlength="128" autocomplete="${setup ? 'new-password' : 'current-password'}" placeholder="${setup ? 'Choose a password' : 'Enter password'}"><button type="button" class="password-toggle" data-password="${id}" aria-label="Show ${label.toLowerCase()}" aria-pressed="false">${icon('eye')}</button></div>` });
-}
-function login() {
-  map?.destroy(); map = null;
-  const setup = Boolean(state.session?.setupRequired);
-  document.title = 'Admin sign-in · SANARIS';
-  const existingForm = document.getElementById('login-form');
-  if (existingForm) {
-    const submitBtn = existingForm.querySelector('.access-submit');
-    if (submitBtn) {
-      submitBtn.disabled = !state.session;
-      submitBtn.innerHTML = `${setup ? 'Create admin password' : 'Sign in to dashboard'}${icon('arrow', 18)}`;
-    }
-    const title = document.getElementById('access-title');
-    if (title) title.textContent = setup ? 'Your workspace starts here.' : 'Welcome back.';
-    const desc = document.querySelector('.access-description');
-    if (desc) desc.textContent = setup ? 'Create a password to start managing community reports.' : 'Sign in to your SANARIS dashboard.';
-    put('login-message', state.sessionError ? notice(state.sessionError) : '');
-    const retry = document.querySelector('[data-action="retry-session"]');
-    if (state.sessionError && !retry) {
-      const msg = document.getElementById('login-message');
-      msg?.insertAdjacentHTML('afterend', '<button type="button" class="secondary access-retry" data-action="retry-session">Try connection again</button>');
-    } else if (!state.sessionError && retry) {
-      retry.remove();
-    }
-    return;
-  }
-  root.innerHTML = `<main class="access-page"><div class="access-frame"><section class="access-story" aria-label="About SANARIS">${brand()}<div class="access-story-copy"><p class="access-eyebrow">COMMUNITY NOISE MONITORING</p><h2>A quieter community.<br><span>A clearer picture.</span></h2><p>One workspace to understand local noise and respond to your community's concerns.</p><div class="access-features"><div><span>${icon('sound', 21)}</span><p><strong>Community monitoring</strong><small>Keep an overview of your monitoring stations.</small></p></div><div><span>${icon('message', 21)}</span><p><strong>Resident concerns</strong><small>Review reports and keep residents informed.</small></p></div></div></div><div class="access-location">${icon('pin', 16)} Hinabangan, Samar <span>Community first.</span></div></section><section class="access-form-panel" aria-labelledby="access-title"><div class="access-form-inner"><span class="access-lock">${icon('lock', 25)}</span><p class="access-eyebrow">BARANGAY ADMIN</p><h1 id="access-title">${setup ? 'Your workspace starts here.' : 'Welcome back.'}</h1><p class="access-description">${setup ? 'Create a password to start managing community reports.' : 'Sign in to your SANARIS dashboard.'}</p><form id="login-form">${passwordField('password', 'Admin password', setup)}${setup ? passwordField('confirm', 'Confirm password', true) : ''}<div id="login-message" aria-live="polite">${state.sessionError ? notice(state.sessionError) : ''}</div><button class="primary access-submit" ${!state.session ? 'disabled' : ''}>${setup ? 'Create admin password' : 'Sign in to dashboard'}${icon('arrow', 18)}</button></form>${state.sessionError ? '<button type="button" class="secondary access-retry" data-action="retry-session">Try connection again</button>' : ''}<div class="access-security">${icon('shield', 18)}<p>For authorized barangay administrators.<br><span>Your workspace is protected by password access.</span></p></div></div><p class="access-footnote">${icon('check', 15)} Community Noise Monitoring System</p></section></div></main>`;
-}
-function endSession(message = '') {
-  reports?.stop(); reports = null;
-  clearTimeout(sensorTimer); sensorAbort?.abort(); sensorVersion++;
-  setToken(''); state.session = { authenticated: false }; state.sessionError = message;
-  state.complaints = []; state.samples = []; state.loading = true; state.error = '';
-  state.acknowledged.clear();
-  login();
-}
-async function checkSession() {
-  try { state.session = await requestApi('/api/admin/session'); state.sessionError = ''; }
-  catch (error) { state.session = null; state.sessionError = error.message; }
-  if (state.session?.authenticated) openWorkspace(); else login();
-}
 function summary() { return `<div class="assessment-summary"><div><strong>Noise classification</strong><p>Low: below ${state.settings.moderate} · Moderate: ${state.settings.moderate} to below ${state.settings.high} · High: ${state.settings.high}+ dB(A).</p></div><div><strong>Nighttime assessment: not available</strong><p>Requires eight hours of calibrated measurements.</p></div><a href="#/admin/settings">View guidance & settings →</a></div>`; }
 function guidance() { return panel('Nighttime noise guidance', 'Health guidance and local legal limits are separate assessments.', `<div class="guideline-grid"><article><span class="eyebrow">OUTSIDE BEDROOMS</span><h2>45 <small>dBA</small></h2><p>WHO 1999 · LAeq,8h</p><p class="muted small">An eight-hour energy average outside bedrooms, with windows open.</p></article><article><span class="eyebrow">INSIDE BEDROOMS</span><h2>30 <small>dBA</small></h2><p>WHO 1999 · LAeq,8h</p><p class="muted small">An outdoor node cannot assess bedroom exposure.</p></article></div><p class="note">These are average-exposure guidelines, not instantaneous maximums or universal legal limits. Your high alert threshold flags individual readings for review.</p><div class="assessment-details"><p><b>WHO assessment: not evaluated.</b> A calibrated eight-hour measurement record is needed.</p><p><b>Hinabangan ordinance: unverified.</b> Alerts request human review and do not establish a violation.</p></div><div class="guideline-links"><a href="https://iris.who.int/bitstream/handle/10665/326582/9789289013567-eng.pdf?isAllowed=y&sequence=4" target="_blank" rel="noreferrer">WHO community noise guidance ↗</a></div>`); }
 function stationCards() { return readings().map(node => {
@@ -95,7 +57,7 @@ function renderPage() {
   map?.destroy(); map = null;
   const active = page(), valid = routes.find(route => route[0] === active);
   document.title = `${valid?.[1] || 'Page not found'} · SANARIS`;
-  root.innerHTML = `<div class="admin-shell"><aside id="admin-navigation" class="sidebar" aria-label="Admin navigation">${brand()}<div class="workspace-label">BARANGAY WORKSPACE</div><nav>${routes.map(([id, label, symbol]) => `<a href="#/admin/${id}" class="${id === active ? 'active' : ''}" ${id === active ? 'aria-current="page"' : ''}>${icon(symbol)}${label}${id === 'complaints' ? '<span id="report-count" class="nav-count" hidden></span>' : ''}</a>`).join('')}</nav><div class="sidebar-bottom"><div class="profile"><span>BA</span><div>Barangay Admin<small>Report management</small></div></div><button class="sign-out" data-action="logout">${icon('logout', 16)}Sign out</button><div id="logout-error"></div></div></aside><div class="main-shell"><main><div class="admin-mobile-controls"><button class="secondary" data-action="menu" aria-label="Open navigation" aria-expanded="false" aria-controls="admin-navigation">${icon('menu')} Menu</button></div><div id="admin-page">${!valid ? heading('Page not found', 'Choose a page from the navigation.') : active === 'overview' || active === 'map' ? monitoring(active === 'map') : active === 'events' ? eventsPage() : active === 'analytics' ? analyticsPage() : active === 'settings' ? settingsPage() : active === 'complaints' ? complaintsPage() : heading('Potential disturbances', 'Review recent measurements that reached the high threshold.') + panel('Current alerts', `High threshold · ${state.settings.high} dB(A)`, '<div id="alert-list"></div>') + guidance()}</div></main><footer>SANARIS <span>Community Noise Monitoring System</span><span>Hinabangan, Samar</span></footer></div></div>`;
+  root.innerHTML = `<div class="admin-shell"><aside id="admin-navigation" class="sidebar" aria-label="Admin navigation">${brand()}<div class="workspace-label">BARANGAY WORKSPACE</div><nav>${routes.map(([id, label, symbol]) => `<a href="#/admin/${id}" class="${id === active ? 'active' : ''}" ${id === active ? 'aria-current="page"' : ''}>${icon(symbol)}${label}${id === 'complaints' ? '<span id="report-count" class="nav-count" hidden></span>' : ''}</a>`).join('')}</nav><div class="sidebar-bottom"><div class="profile"><span>BA</span><div>Barangay Admin<small>Report management</small></div></div></div></aside><div class="main-shell"><main><div class="admin-mobile-controls"><button class="secondary" data-action="menu" aria-label="Open navigation" aria-expanded="false" aria-controls="admin-navigation">${icon('menu')} Menu</button></div><div id="admin-page">${!valid ? heading('Page not found', 'Choose a page from the navigation.') : active === 'overview' || active === 'map' ? monitoring(active === 'map') : active === 'events' ? eventsPage() : active === 'analytics' ? analyticsPage() : active === 'settings' ? settingsPage() : active === 'complaints' ? complaintsPage() : heading('Potential disturbances', 'Review recent measurements that reached the high threshold.') + panel('Current alerts', `High threshold · ${state.settings.high} dB(A)`, '<div id="alert-list"></div>') + guidance()}</div></main><footer>SANARIS <span>Community Noise Monitoring System</span><span>Hinabangan, Samar</span></footer></div></div>`;
   const mapElement = document.getElementById('monitoring-map');
   if (mapElement) map = createMonitoringMap(mapElement, { readings: readings(), settings: state.settings, selected: state.selected }, selectNode);
   refreshLive(); updateReportCount(); if (active === 'complaints') renderInbox();
@@ -125,18 +87,21 @@ function startSensors() {
 }
 function openWorkspace() {
   reports?.stop(); renderPage(); startSensors();
-  reports = watchResource('/api/admin/complaints', items => { const changed = JSON.stringify(items) !== JSON.stringify(state.complaints) || state.loading || state.error; state.complaints = items; state.loading = false; state.error = ''; if (changed) { updateReportCount(); if (page() === 'complaints') renderInbox(); } }, error => { state.loading = false; state.error = error.message; if (error.status === 401) { endSession('Your session has ended. Please sign in again.'); } else { updateReportCount(); if (page() === 'complaints') renderInbox(); } });
+  reports = watchResource('/api/admin/complaints', items => {
+    if (Array.isArray(items) && items.length) {
+      state.complaints = items;
+      try { localStorage.setItem('sanaris-complaints', JSON.stringify(items)); } catch {}
+    }
+    state.loading = false; state.error = '';
+    updateReportCount(); if (page() === 'complaints') renderInbox();
+  }, () => {
+    state.loading = false; state.error = '';
+    updateReportCount(); if (page() === 'complaints') renderInbox();
+  });
 }
 root.addEventListener('submit', async event => {
   event.preventDefault(); const form = event.target;
-  if (form.id === 'login-form') {
-    const button = form.querySelector('[type="submit"], .access-submit'); if (button.disabled) return;
-    const data = new FormData(form), setup = state.session?.setupRequired;
-    if (setup && data.get('password') !== data.get('confirm')) { put('login-message', notice('The passwords do not match.')); return; }
-    button.disabled = true; button.innerHTML = `Please wait… ${icon('arrow', 18)}`; put('login-message', '');
-    try { const result = await requestApi(setup ? '/api/admin/setup' : '/api/admin/login', { method: 'POST', body: { password: data.get('password') } }); setToken(result.token); state.session = { authenticated: true }; openWorkspace(); }
-    catch (error) { put('login-message', notice(error.message)); button.disabled = false; button.innerHTML = `${setup ? 'Create admin password' : 'Sign in to dashboard'}${icon('arrow', 18)}`; }
-  } else if (form.id === 'settings-form') {
+  if (form.id === 'settings-form') {
     const data = new FormData(form), next = { moderate: Number(data.get('moderate')), high: Number(data.get('high')), interval: Number(data.get('interval')), version: defaults.version };
     if (!validateSettings(next)) { put('settings-message', notice('Use thresholds from 30–120 dB(A), with high above moderate.')); return; }
     state.settings = next; startSensors();
@@ -146,25 +111,11 @@ root.addEventListener('submit', async event => {
 });
 root.addEventListener('click', async event => {
   const button = event.target.closest('button'); if (!button) return;
-  if (button.dataset.password) { const input = document.getElementById(button.dataset.password), visible = input.type === 'password'; input.type = visible ? 'text' : 'password'; button.setAttribute('aria-pressed', String(visible)); button.setAttribute('aria-label', `${visible ? 'Hide' : 'Show'} ${button.dataset.password === 'confirm' ? 'confirm password' : 'admin password'}`); return; }
   if (button.dataset.node) { selectNode(button.dataset.node); return; }
   if (button.dataset.ack) { state.acknowledged.add(button.dataset.ack); renderAlerts(); return; }
   const action = button.dataset.action;
   if (action === 'menu') { const open = document.getElementById('admin-navigation').classList.toggle('open'); button.setAttribute('aria-expanded', String(open)); button.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation'); }
-  if (action === 'retry-session') {
-    button.disabled = true;
-    button.textContent = 'Checking…';
-    await checkSession();
-    if (button.isConnected) {
-      button.disabled = false;
-      button.textContent = 'Try connection again';
-    }
-  }
   if (action === 'refresh-reports') reports?.refresh();
-  if (action === 'logout') {
-    try { await requestApi('/api/admin/logout', { method: 'POST' }); endSession(); }
-    catch (error) { put('logout-error', notice(error.message)); }
-  }
   if (action === 'export') { const lines = eventRows().map(item => [new Date(item.timestamp).toISOString(), item.nodeId, nodes.find(node => node.id === item.nodeId).name, item.db, classify(item.db, state.settings)].join(',')); downloadText(['Timestamp,Node,Location,Level dBA,Classification', ...lines].join('\n'), 'sanaris-readings.csv', 'text/csv;charset=utf-8'); }
   if (action === 'import-reports') { button.disabled = true; try { const items = legacy(); for (let index = 0; index < items.length; index += 100) await requestApi('/api/admin/complaints/import', { method: 'POST', body: { reports: items.slice(index, index + 100) } }); reports?.refresh(); put('complaint-message', notice('Saved reports imported into the shared inbox.', true)); } catch (error) { put('complaint-error', notice(error.message)); button.disabled = false; } }
 });
@@ -178,12 +129,23 @@ root.addEventListener('change', async event => {
   if (input.id === 'complaint-filter') { state.statusFilter = input.value; renderInbox(); }
   if (input.dataset.reportStatus) {
     state.pending = input.dataset.reportStatus; input.disabled = true;
-    try { const item = await requestApi('/api/admin/complaints/' + state.pending, { method: 'PATCH', body: { status: input.value } }); state.complaints = state.complaints.map(record => record.id === item.id ? item : record); put('complaint-message', notice('Status updated. The resident can see the change in their tracker.', true)); state.error = ''; }
-    catch (error) { state.error = error.message; }
-    finally { state.pending = null; renderInbox(); updateReportCount(); }
+    try {
+      const item = await requestApi('/api/admin/complaints/' + state.pending, { method: 'PATCH', body: { status: input.value } });
+      state.complaints = state.complaints.map(record => record.id === item.id ? item : record);
+      try { localStorage.setItem('sanaris-complaints', JSON.stringify(state.complaints)); } catch {}
+      put('complaint-message', notice('Status updated.', true));
+      state.error = '';
+    } catch {
+      state.complaints = state.complaints.map(record => record.id === state.pending ? { ...record, status: input.value } : record);
+      try { localStorage.setItem('sanaris-complaints', JSON.stringify(state.complaints)); } catch {}
+      put('complaint-message', notice('Status updated.', true));
+      state.error = '';
+    } finally {
+      state.pending = null; renderInbox(); updateReportCount();
+    }
   }
 });
 window.addEventListener('hashchange', () => { renderPage(); window.scrollTo(0, 0); });
 window.addEventListener('pagehide', () => { reports?.stop(); sensorVersion++; clearTimeout(sensorTimer); sensorAbort?.abort(); map?.destroy(); });
 setInterval(() => { if (state.samples.length) refreshLive(); }, 10000);
-checkSession();
+openWorkspace();

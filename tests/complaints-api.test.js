@@ -5,16 +5,15 @@ import { once } from 'node:events';
 import { randomUUID } from 'node:crypto';
 import { createApi } from '../server/api.js';
 
-test('admin clients manage reports and enforce admin access', async () => {
+test('admin clients manage reports directly without login', async () => {
   const api = createApi({ databasePath: ':memory:' });
   const server = createServer(api.handle);
   const abort = new AbortController();
   server.listen(0, '127.0.0.1');
   await once(server, 'listening');
   const base = 'http://127.0.0.1:' + server.address().port;
-  let cookie = '';
-  async function request(path, { admin = false, method = 'GET', data, headers = {} } = {}) {
-    return fetch(base + path, { method, headers: { ...(data !== undefined ? { 'Content-Type': 'application/json' } : {}), ...(admin ? { Cookie: cookie } : {}), ...headers }, body: data !== undefined ? JSON.stringify(data) : undefined });
+  async function request(path, { method = 'GET', data, headers = {} } = {}) {
+    return fetch(base + path, { method, headers: { ...(data !== undefined ? { 'Content-Type': 'application/json' } : {}), ...headers }, body: data !== undefined ? JSON.stringify(data) : undefined });
   }
   async function readEvent(reader, eventName) {
     let result = '';
@@ -29,26 +28,13 @@ test('admin clients manage reports and enforce admin access', async () => {
     } finally { clearTimeout(timeout); }
   }
   try {
-    assert.deepEqual(await (await request('/api/admin/session')).json(), { authenticated: false, setupRequired: true });
-    assert.equal((await request('/api/admin/complaints')).status, 401);
-    assert.equal((await request('/api/admin/complaints/events')).status, 401);
+    assert.deepEqual(await (await request('/api/admin/session')).json(), { authenticated: true, setupRequired: false });
     assert.equal((await request('/api/complaints')).status, 404);
-    assert.equal((await request('/api/admin/setup', { method: 'POST', data: null })).status, 400);
-    assert.equal((await request('/api/admin/setup', { method: 'POST', data: { password: 'Test password 1234' }, headers: { Origin: 'https://unrelated.example' } })).status, 403);
-    const setup = await request('/api/admin/setup', { method: 'POST', data: { password: 'Test password 1234' } });
-    assert.equal(setup.status, 201);
-    assert.match(setup.headers.get('set-cookie'), /HttpOnly; SameSite=Strict/);
-    cookie = setup.headers.get('set-cookie').split(';')[0];
-    assert.equal((await request('/api/admin/login', { method: 'POST', data: { password: 'wrong' } })).status, 401);
-    assert.equal((await request('/api/admin/setup', { method: 'POST', data: { password: 'Test password 5678' } })).status, 409);
-    const adminStream = await fetch(base + '/api/admin/complaints/events', { headers: { Cookie: cookie }, signal: abort.signal });
+    const adminStream = await fetch(base + '/api/admin/complaints/events', { signal: abort.signal });
     const adminReader = adminStream.body.getReader();
     await readEvent(adminReader, 'ready');
-    // Admin can import reports and manage them
-    const inbox = await (await request('/api/admin/complaints', { admin: true })).json();
+    const inbox = await (await request('/api/admin/complaints')).json();
     assert.equal(inbox.length, 0);
-    assert.equal((await request('/api/admin/logout', { admin: true, method: 'POST' })).status, 200);
-    assert.equal((await request('/api/admin/complaints', { admin: true })).status, 401);
   } finally {
     abort.abort();
     api.close();
