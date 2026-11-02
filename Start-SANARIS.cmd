@@ -13,7 +13,6 @@ node scripts/check-runtime.mjs
 if errorlevel 1 goto failed
 
 echo SANARIS admin: http://127.0.0.1:5173/#/admin/overview
-echo Resident reporting: http://127.0.0.1:5173/resident/#/report
 echo Starting SANARIS or finding its existing server...
 if /I "%~1"=="--no-open" (
   node scripts/dev.mjs

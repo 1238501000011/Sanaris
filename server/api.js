@@ -133,20 +133,8 @@ export function createApi({ databasePath, allowedOrigins = [], initialPassword =
           return json(response, 200, item);
         }
       }
-      if (pathname === '/api/complaints' && request.method === 'POST') {
-        rateLimit(request, 'submit', 20);
-        const result = store.submit(await body(request), request.headers['idempotency-key']);
-        if (result.created) publish(result.item.id);
-        return json(response, result.created ? 201 : 200, publicStatus(result.item));
-      }
-      const tracking = pathname.match(/^\/api\/complaints\/(SAN-\d{4}-[A-F0-9]{12,24})(\/events)?$/);
-      if (tracking && request.method === 'GET') {
-        rateLimit(request, 'track', 120);
-        const item = store.find(tracking[1]);
-        if (!item) throw new RequestError('No report found. Check your reference number.', 404);
-        if (tracking[2]) return openStream(request, response, { id: item.id });
-        return json(response, 200, publicStatus(item));
-      }
+      // Resident-facing submission and tracking endpoints removed.
+      // Complaints are managed exclusively through the admin dashboard.
       return json(response, 404, { error: 'Not found.' });
     } catch (error) {
       if (!response.headersSent) json(response, error instanceof RequestError ? error.status : 500, { error: error instanceof RequestError ? error.message : 'The report service could not complete this request. Please try again.' });

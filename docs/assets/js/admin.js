@@ -21,6 +21,27 @@ function login() {
   map?.destroy(); map = null;
   const setup = Boolean(state.session?.setupRequired);
   document.title = 'Admin sign-in · SANARIS';
+  const existingForm = document.getElementById('login-form');
+  if (existingForm) {
+    const submitBtn = existingForm.querySelector('.access-submit');
+    if (submitBtn) {
+      submitBtn.disabled = !state.session;
+      submitBtn.innerHTML = `${setup ? 'Create admin password' : 'Sign in to dashboard'}${icon('arrow', 18)}`;
+    }
+    const title = document.getElementById('access-title');
+    if (title) title.textContent = setup ? 'Your workspace starts here.' : 'Welcome back.';
+    const desc = document.querySelector('.access-description');
+    if (desc) desc.textContent = setup ? 'Create a password to start managing community reports.' : 'Sign in to your SANARIS dashboard.';
+    put('login-message', state.sessionError ? notice(state.sessionError) : '');
+    const retry = document.querySelector('[data-action="retry-session"]');
+    if (state.sessionError && !retry) {
+      const msg = document.getElementById('login-message');
+      msg?.insertAdjacentHTML('afterend', '<button type="button" class="secondary access-retry" data-action="retry-session">Try connection again</button>');
+    } else if (!state.sessionError && retry) {
+      retry.remove();
+    }
+    return;
+  }
   root.innerHTML = `<main class="access-page"><div class="access-frame"><section class="access-story" aria-label="About SANARIS">${brand()}<div class="access-story-copy"><p class="access-eyebrow">COMMUNITY NOISE MONITORING</p><h2>A quieter community.<br><span>A clearer picture.</span></h2><p>One workspace to understand local noise and respond to your community's concerns.</p><div class="access-features"><div><span>${icon('sound', 21)}</span><p><strong>Community monitoring</strong><small>Keep an overview of your monitoring stations.</small></p></div><div><span>${icon('message', 21)}</span><p><strong>Resident concerns</strong><small>Review reports and keep residents informed.</small></p></div></div></div><div class="access-location">${icon('pin', 16)} Hinabangan, Samar <span>Community first.</span></div></section><section class="access-form-panel" aria-labelledby="access-title"><div class="access-form-inner"><span class="access-lock">${icon('lock', 25)}</span><p class="access-eyebrow">BARANGAY ADMIN</p><h1 id="access-title">${setup ? 'Your workspace starts here.' : 'Welcome back.'}</h1><p class="access-description">${setup ? 'Create a password to start managing community reports.' : 'Sign in to your SANARIS dashboard.'}</p><form id="login-form">${passwordField('password', 'Admin password', setup)}${setup ? passwordField('confirm', 'Confirm password', true) : ''}<div id="login-message" aria-live="polite">${state.sessionError ? notice(state.sessionError) : ''}</div><button class="primary access-submit" ${!state.session ? 'disabled' : ''}>${setup ? 'Create admin password' : 'Sign in to dashboard'}${icon('arrow', 18)}</button></form>${state.sessionError ? '<button type="button" class="secondary access-retry" data-action="retry-session">Try connection again</button>' : ''}<div class="access-security">${icon('shield', 18)}<p>For authorized barangay administrators.<br><span>Your workspace is protected by password access.</span></p></div></div><p class="access-footnote">${icon('check', 15)} Community Noise Monitoring System</p></section></div></main>`;
 }
 function endSession(message = '') {
@@ -112,9 +133,9 @@ root.addEventListener('submit', async event => {
     const button = form.querySelector('[type="submit"], .access-submit'); if (button.disabled) return;
     const data = new FormData(form), setup = state.session?.setupRequired;
     if (setup && data.get('password') !== data.get('confirm')) { put('login-message', notice('The passwords do not match.')); return; }
-    button.disabled = true; button.textContent = 'Please wait…'; put('login-message', '');
+    button.disabled = true; button.innerHTML = `Please wait… ${icon('arrow', 18)}`; put('login-message', '');
     try { const result = await requestApi(setup ? '/api/admin/setup' : '/api/admin/login', { method: 'POST', body: { password: data.get('password') } }); setToken(result.token); state.session = { authenticated: true }; openWorkspace(); }
-    catch (error) { put('login-message', notice(error.message)); button.disabled = false; button.textContent = setup ? 'Create admin password' : 'Sign in to dashboard'; }
+    catch (error) { put('login-message', notice(error.message)); button.disabled = false; button.innerHTML = `${setup ? 'Create admin password' : 'Sign in to dashboard'}${icon('arrow', 18)}`; }
   } else if (form.id === 'settings-form') {
     const data = new FormData(form), next = { moderate: Number(data.get('moderate')), high: Number(data.get('high')), interval: Number(data.get('interval')), version: defaults.version };
     if (!validateSettings(next)) { put('settings-message', notice('Use thresholds from 30–120 dB(A), with high above moderate.')); return; }
@@ -130,7 +151,15 @@ root.addEventListener('click', async event => {
   if (button.dataset.ack) { state.acknowledged.add(button.dataset.ack); renderAlerts(); return; }
   const action = button.dataset.action;
   if (action === 'menu') { const open = document.getElementById('admin-navigation').classList.toggle('open'); button.setAttribute('aria-expanded', String(open)); button.setAttribute('aria-label', open ? 'Close navigation' : 'Open navigation'); }
-  if (action === 'retry-session') checkSession();
+  if (action === 'retry-session') {
+    button.disabled = true;
+    button.textContent = 'Checking…';
+    await checkSession();
+    if (button.isConnected) {
+      button.disabled = false;
+      button.textContent = 'Try connection again';
+    }
+  }
   if (action === 'refresh-reports') reports?.refresh();
   if (action === 'logout') {
     try { await requestApi('/api/admin/logout', { method: 'POST' }); endSession(); }
@@ -157,4 +186,4 @@ root.addEventListener('change', async event => {
 window.addEventListener('hashchange', () => { renderPage(); window.scrollTo(0, 0); });
 window.addEventListener('pagehide', () => { reports?.stop(); sensorVersion++; clearTimeout(sensorTimer); sensorAbort?.abort(); map?.destroy(); });
 setInterval(() => { if (state.samples.length) refreshLive(); }, 10000);
-login(); checkSession();
+checkSession();

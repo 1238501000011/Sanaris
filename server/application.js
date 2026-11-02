@@ -24,7 +24,6 @@ export function createApplication({ root, publicRoot = resolve(root, 'docs'), da
     if (pathname === '/docs' || pathname.startsWith('/docs/')) {
       response.writeHead(302, { Location: pathname.slice(5) || '/' }); response.end(); return;
     }
-    if (pathname === '/resident') { response.writeHead(302, { Location: '/resident/' }); response.end(); return; }
     const file = resolve(publicRoot, '.' + (pathname.endsWith('/') ? pathname + 'index.html' : pathname));
     if (!file.startsWith(resolve(publicRoot) + sep)) { response.writeHead(404); response.end('Not found.'); return; }
     try {

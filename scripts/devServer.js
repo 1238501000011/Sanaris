@@ -69,7 +69,6 @@ function openBrowser(url) {
 function showReady(origin, reused, open) {
   console.log(reused ? 'SANARIS is already running for this project. Reusing the existing server.' : 'SANARIS started successfully.');
   console.log('  Admin: ' + origin + '/#/admin/overview');
-  console.log('  Residents: ' + origin + '/resident/#/report');
   console.log(reused ? 'Keep the original server terminal open. This command can close.' : 'Keep this terminal open. Press Ctrl+C to stop the server.');
   console.log('SANARIS: ready');
   if (open) openBrowser(browserUrl(origin, open));
@@ -85,7 +84,7 @@ function conflictMessage(state, port) {
 export async function startDevServer(root, args) {
   const options = parseDevOptions(args);
   if (options.help) {
-    console.log('Usage: npm run dev -- [--port 5173] [--open [/resident/#/report]] [--no-open]');
+    console.log('Usage: npm run dev -- [--port 5173] [--open [/#/admin/overview]] [--no-open]');
     console.log('Starts SANARIS locally, or reuses a healthy server for the same project and database.');
     return;
   }

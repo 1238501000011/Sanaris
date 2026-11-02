@@ -15,7 +15,7 @@ if (!process.exitCode) {
     application = createApplication({ ...backendOptions(root), ...(process.argv.includes('--preview') ? { publicRoot: resolve(root, 'dist') } : {}) });
     await application.listen(port, host);
     console.log('SANARIS listening on ' + host + ':' + port);
-    console.log('Admin: /#/admin/overview | Residents: /resident/#/report | Health: /api/health');
+    console.log('Admin: /#/admin/overview | Health: /api/health');
     const shutdown = () => application.close();
     process.on('SIGINT', shutdown);
     process.on('SIGTERM', shutdown);

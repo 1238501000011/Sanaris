@@ -68,7 +68,7 @@ test('repeated startup reuses a healthy server for the same project and database
     assert.equal(result.code, 0, result.output);
     assert.match(result.output, /already running for this project/);
     assert.match(result.output, /SANARIS: ready/);
-    assert.ok(result.output.includes('http://127.0.0.1:' + port + '/resident/#/report'));
+    assert.ok(result.output.includes('http://127.0.0.1:' + port + '/#/admin/overview'));
     assert.doesNotMatch(result.output, /ExperimentalWarning|Re-optimizing|Port \d+ is already in use/);
     assert.deepEqual(requests, [{ path: devIdentityPath, method: 'GET' }, { path: '/api/admin/session', method: 'GET' }]);
   });
@@ -116,7 +116,7 @@ test('a free port is distinguished from a conflicting server', async () => {
 });
 
 test('custom ports and browser targets stay explicit and local', () => {
-  assert.deepEqual(parseDevOptions(['--port', '5180', '--open', '/resident/#/report', '--strictPort']), { port: 5180, open: '/resident/#/report', help: false });
+  assert.deepEqual(parseDevOptions(['--port', '5180', '--open', '/#/admin/overview', '--strictPort']), { port: 5180, open: '/#/admin/overview', help: false });
   assert.equal(parseDevOptions(['--host', '127.0.0.1', '--open', '--no-open']).open, false);
   for (const args of [['--port'], ['--port=-1'], ['--port', '65536'], ['--open', 'https://example.com'], ['--open', '//example.com']]) assert.throws(() => parseDevOptions(args));
   assert.equal(browserUrl('http://127.0.0.1:5180', '/#/admin/overview'), 'http://127.0.0.1:5180/#/admin/overview');
