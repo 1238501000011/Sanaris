@@ -1,4 +1,4 @@
-import { classify } from './model.js';
+import { classify } from './model.js?v=cloud-20261103';
 
 export const mapColors = { Low: '#20a38a', Moderate: '#e4a238', High: '#e25e68' };
 export const waitingColor = '#8190a5';

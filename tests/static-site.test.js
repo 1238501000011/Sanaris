@@ -52,7 +52,7 @@ test('all frontend module imports and CSS assets resolve inside the publish fold
       assert.ok(reference.startsWith('.'), 'Browser imports must be relative: ' + reference);
       const resolved = new URL(reference, 'https://example.github.io/sanaris-dashboard/' + browserPath);
       assert.ok(resolved.pathname.startsWith('/sanaris-dashboard/'), resolved.href);
-      await readFile(resolve(dirname(filename), reference));
+      await readFile(resolve(publicRoot, decodeURIComponent(resolved.pathname.slice('/sanaris-dashboard/'.length))));
     }
   }
 });

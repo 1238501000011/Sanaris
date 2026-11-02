@@ -1,4 +1,4 @@
-import { nodes } from './model.js';
+import { nodes } from './model.js?v=cloud-20261103';
 
 const stationIds = new Set(nodes.map(node => node.id));
 const historyLimit = 120;

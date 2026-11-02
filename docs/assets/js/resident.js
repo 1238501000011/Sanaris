@@ -1,6 +1,6 @@
-import { requestApi, watchResource } from './api.js';
-import { localDateTime, noiseCategories, referencePattern, validateResidentReport } from './residentForm.js';
-import { escapeHTML as e, icon, brand, badge, field, notice, downloadText, dateTime } from './ui.js';
+import { requestApi, watchResource } from './api.js?v=cloud-20261103';
+import { localDateTime, noiseCategories, referencePattern, validateResidentReport } from './residentForm.js?v=cloud-20261103';
+import { escapeHTML as e, icon, brand, badge, field, notice, downloadText, dateTime } from './ui.js?v=cloud-20261103';
 
 const root = document.querySelector('#app');
 const blankDraft = () => ({ location: '', category: '', incidentAt: '', description: '', consent: false });

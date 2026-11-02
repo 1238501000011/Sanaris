@@ -1,8 +1,8 @@
-import { mapCenter } from './model.js';
-import { stationDisplay } from './mapDisplay.js';
-import { loadGoogleMaps, onGoogleMapsError } from './googleMaps.js';
-import { config } from './api.js';
-import { escapeHTML as e } from './ui.js';
+import { mapCenter } from './model.js?v=cloud-20261103';
+import { stationDisplay } from './mapDisplay.js?v=cloud-20261103';
+import { loadGoogleMaps, onGoogleMapsError } from './googleMaps.js?v=cloud-20261103';
+import { config } from './api.js?v=cloud-20261103';
+import { escapeHTML as e } from './ui.js?v=cloud-20261103';
 
 function popup(node, settings) { const display = stationDisplay(node, settings); return `<div class="station-popup"><strong>${e(node.name)}</strong><p>${e(node.id)}</p><p>${e(display.reading)}</p><p>${e(display.time)}</p></div>`; }
 export function createMonitoringMap(element, initial, onSelect) {

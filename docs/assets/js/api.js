@@ -1,4 +1,4 @@
-import { config } from '../../config.js';
+import { config } from '../../config.js?v=cloud-20261103';
 export { config };
 let token = '';
 export function setToken(value) { token = typeof value === 'string' ? value : ''; }

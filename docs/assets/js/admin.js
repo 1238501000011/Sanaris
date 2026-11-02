@@ -1,9 +1,9 @@
-import { requestApi, watchResource, setToken, config } from './api.js';
-import { defaults, migrateSettings, validateSettings, classify, nodes } from './model.js';
-import { parseReadings, mergeReadings, stationReadings } from './telemetry.js';
-import { escapeHTML as e, icon, brand, heading, panel, badge, empty, notice, field, downloadText, dateTime } from './ui.js';
-import { trendChart, classificationChart } from './charts.js';
-import { createMonitoringMap } from './monitoringMap.js';
+import { requestApi, watchResource, setToken, config } from './api.js?v=cloud-20261103';
+import { defaults, migrateSettings, validateSettings, classify, nodes } from './model.js?v=cloud-20261103';
+import { parseReadings, mergeReadings, stationReadings } from './telemetry.js?v=cloud-20261103';
+import { escapeHTML as e, icon, brand, heading, panel, badge, empty, notice, field, downloadText, dateTime } from './ui.js?v=cloud-20261103';
+import { trendChart, classificationChart } from './charts.js?v=cloud-20261103';
+import { createMonitoringMap } from './monitoringMap.js?v=cloud-20261103';
 
 const root = document.getElementById('app');
 const routes = [['overview', 'Overview', 'grid'], ['map', 'Monitoring map', 'pin'], ['events', 'Event history', 'clock'], ['alerts', 'Disturbance alerts', 'bell'], ['analytics', 'Noise analytics', 'chart'], ['complaints', 'Resident complaints', 'message'], ['settings', 'Assessment settings', 'settings']];

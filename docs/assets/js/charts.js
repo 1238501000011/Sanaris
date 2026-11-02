@@ -1,5 +1,5 @@
-import { classify } from './model.js';
-import { escapeHTML as e, empty } from './ui.js';
+import { classify } from './model.js?v=cloud-20261103';
+import { escapeHTML as e, empty } from './ui.js?v=cloud-20261103';
 const colors = { Low: '#20a38a', Moderate: '#e4a238', High: '#e25e68' };
 export function trendChart(data, settings, message) {
   if (!data.length) return empty(message || 'Awaiting sensor data');
