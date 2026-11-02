@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "engines": { "node": ">=22.13.0" },
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
+    "predev": "node scripts/check-runtime.mjs",
+    "dev": "node scripts/dev.mjs",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
+    "start": "node server/start.js",
     "test": "node --test --test-isolation=none tests/*.test.js"
   },
   "dependencies": {

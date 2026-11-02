@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "SANARIS: Admin dashboard",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "http://127.0.0.1:5173/#/admin/overview",
+      "webRoot": "${workspaceFolder}",
+      "preLaunchTask": "SANARIS: start server"
+    },
+    {
+      "name": "SANARIS: Resident reporting",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "http://127.0.0.1:5173/resident/#/report",
+      "webRoot": "${workspaceFolder}",
+      "preLaunchTask": "SANARIS: start server"
+    }
+  ]
+}

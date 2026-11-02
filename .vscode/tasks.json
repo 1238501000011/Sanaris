@@ -1,0 +1,42 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "SANARIS: install dependencies",
+      "type": "shell",
+      "command": "npm",
+      "windows": { "command": "npm.cmd" },
+      "args": ["ci"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "SANARIS: start server",
+      "type": "shell",
+      "command": "npm",
+      "windows": { "command": "npm.cmd" },
+      "args": ["run", "dev"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "runOptions": { "instanceLimit": 1 },
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": { "reveal": "always", "panel": "dedicated" },
+      "problemMatcher": {
+        "owner": "sanaris-vite",
+        "pattern": {
+          "regexp": "^(.+):(\\d+):(\\d+):\\s+(error|warning)\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*SANARIS: starting.*",
+          "endsPattern": ".*SANARIS: ready.*"
+        }
+      }
+    }
+  ]
+}
