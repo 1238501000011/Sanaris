@@ -5,7 +5,8 @@ export function trendChart(data, settings, message) {
   if (!data.length) return empty(message || 'Awaiting sensor data');
   const values = data.slice(-100), width = 640, height = 260, left = 48, right = 18, top = 20, bottom = 38;
   const maximum = Math.max(90, Math.ceil(Math.max(settings.high, ...values.map(item => item.db)) / 30) * 30);
-  const x = index => left + index / Math.max(1, values.length - 1) * (width - left - right);
+  const span = Math.max(1, values.at(-1).timestamp - values[0].timestamp);
+  const x = index => left + (values[index].timestamp - values[0].timestamp) / span * (width - left - right);
   const y = value => height - bottom - value / maximum * (height - top - bottom);
   const points = values.map((item, index) => `${x(index)},${y(item.db)}`).join(' ');
   const ticks = [0, .25, .5, .75, 1].map(part => `<g><line x1="${left}" x2="${width - right}" y1="${y(part * maximum)}" y2="${y(part * maximum)}" stroke="#e8eef6"/><text x="${left - 9}" y="${y(part * maximum) + 4}" text-anchor="end">${Math.round(part * maximum)}</text></g>`).join('');

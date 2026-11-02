@@ -12,24 +12,13 @@ if errorlevel 1 (
 node scripts/check-runtime.mjs
 if errorlevel 1 goto failed
 
-where npm.cmd >nul 2>&1
-if errorlevel 1 (
-  echo npm is not installed or is not on PATH. Reinstall Node.js 24 LTS.
-  goto failed
-)
-if not exist "node_modules\vite\package.json" (
-  echo Installing SANARIS dependencies...
-  call npm.cmd ci
-  if errorlevel 1 goto failed
-)
-
 echo SANARIS admin: http://127.0.0.1:5173/#/admin/overview
 echo Resident reporting: http://127.0.0.1:5173/resident/#/report
 echo Starting SANARIS or finding its existing server...
 if /I "%~1"=="--no-open" (
-  call npm.cmd run dev
+  node scripts/dev.mjs
 ) else (
-  call npm.cmd run dev -- --open
+  node scripts/dev.mjs --open
 )
 if errorlevel 1 goto failed
 exit /b 0

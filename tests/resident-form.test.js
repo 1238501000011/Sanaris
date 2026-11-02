@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateResidentReport, localDateTime, referencePattern } from '../src/lib/residentForm.js';
+import { validateResidentReport, localDateTime, referencePattern } from '../docs/assets/js/residentForm.js';
 
 test('resident form identifies missing details and consent before submission', () => {
   const errors = validateResidentReport({ location: '  ', category: '', incidentAt: '', description: ' short ', consent: false });

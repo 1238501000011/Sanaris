@@ -6,7 +6,7 @@
       "type": "pwa-chrome",
       "request": "launch",
       "url": "http://127.0.0.1:5173/#/admin/overview",
-      "webRoot": "${workspaceFolder}",
+      "webRoot": "${workspaceFolder}/docs",
       "preLaunchTask": "SANARIS: start server"
     },
     {
@@ -14,7 +14,7 @@
       "type": "pwa-chrome",
       "request": "launch",
       "url": "http://127.0.0.1:5173/resident/#/report",
-      "webRoot": "${workspaceFolder}",
+      "webRoot": "${workspaceFolder}/docs",
       "preLaunchTask": "SANARIS: start server"
     }
   ]

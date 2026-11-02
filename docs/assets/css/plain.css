@@ -1,0 +1,35 @@
+[hidden] { display: none !important; }
+:where(.icon) { display: inline-block; flex-shrink: 0; vertical-align: middle; }
+.row { display: flex; align-items: center; gap: 12px; }
+.between { justify-content: space-between; }
+.wrap { flex-wrap: wrap; }
+.initial-state { padding: 48px 24px; max-width: 700px; }
+.initial-state p { margin-top: 14px; }
+.native-chart { width: 100%; }
+.native-chart svg { width: 100%; height: auto; max-height: 340px; display: block; overflow: visible; }
+.native-chart text, .classification-chart text { font-family: inherit; fill: #718198; font-size: 11px; }
+.native-chart circle:focus { outline: none; stroke: #152c4b; stroke-width: 3px; }
+.native-chart p { margin-top: 8px; line-height: 1.6; }
+.classification-chart { display: flex; gap: 24px; align-items: center; justify-content: center; min-height: 260px; }
+.classification-chart svg { width: 180px; flex: 0 1 180px; min-width: 120px; }
+.classification-chart .chart-count { font-size: 23px; font-weight: 700; fill: #152c4b; }
+.classification-chart ul { list-style: none; padding: 0; display: grid; gap: 18px; }
+.classification-chart li { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+.classification-chart li strong { margin-left: 8px; }
+.native-station-marker { background: transparent; border: 0; }
+.native-station-marker > span { width: 32px; height: 32px; border: 3px solid white; box-shadow: 0 2px 8px #152c4b40; border-radius: 50%; display: grid; place-items: center; color: white; font-size: 10px; font-weight: 700; }
+.native-station-marker .selected { outline: 3px solid #447dd690; }
+.node-card .row:last-child { margin-top: 16px; }
+.node-card .badge { align-self: flex-start; }
+.node-card { min-width: 0; }
+.complaint-description { white-space: pre-wrap; overflow-wrap: anywhere; }
+.sidebar .form-notice { padding: 8px; font-size: 11px; }
+.map { position: relative; }
+.access-submit:disabled { cursor: wait; }
+.form-notice { align-items: flex-start; }
+.form-success { display: flex; gap: 9px; align-items: flex-start; }
+.resident-form-section > legend { margin-bottom: 0; }
+.resident-card:focus, .resident-intro:focus { outline: none; }
+.resident-tracking-result .tracking-status .badge { align-self: center; }
+@media (max-width: 540px) { .classification-chart { flex-direction: column; gap: 14px; padding: 15px 0; } .classification-chart svg { flex-basis: auto; } }
+@media (max-width: 400px) { .node-grid { grid-template-columns: minmax(0, 1fr); } }

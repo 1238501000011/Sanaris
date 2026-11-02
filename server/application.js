@@ -8,9 +8,9 @@ import { devIdentity, devIdentityPath } from './devIdentity.js';
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8' };
 
 export function createApplication({ root, publicRoot = resolve(root, 'docs'), databasePath = resolve(root, 'data/sanaris.sqlite'), allowedOrigins = [], development = false, initialPassword = '' }) {
+  const canonicalPublic = realpathSync(publicRoot);
   const api = createApi({ databasePath, allowedOrigins, initialPassword });
   const identity = development ? devIdentity(root, databasePath) : null;
-  const canonicalPublic = realpathSync(publicRoot);
   async function files(request, response) {
     if (!['GET', 'HEAD'].includes(request.method)) { response.writeHead(405); response.end(); return; }
     let pathname;

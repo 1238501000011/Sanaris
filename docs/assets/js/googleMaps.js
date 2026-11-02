@@ -8,7 +8,7 @@ export function onGoogleMapsError(listener) {
   return () => errorListeners.delete(listener);
 }
 
-// A single script and promise are shared across routes and React Strict Mode mounts.
+// A single script and promise are shared across dashboard routes.
 export function loadGoogleMaps(apiKey) {
   if (!apiKey?.trim()) return Promise.reject(new Error('Google Maps needs an API key.'));
   if (authError) return Promise.reject(authError);

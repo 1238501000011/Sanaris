@@ -1,10 +1,9 @@
 import { config } from '../../config.js';
-import { siteRoot } from './ui.js';
 export { config };
 let token = '';
 export function setToken(value) { token = typeof value === 'string' ? value : ''; }
 export function apiUrl(path) {
-  const base = config.apiBase?.trim() ? new URL(config.apiBase.replace(/\/?$/, '/')) : siteRoot;
+  const base = config.apiBase?.trim() ? new URL(config.apiBase.replace(/\/?$/, '/')) : new URL('/', location.href);
   if (!['http:', 'https:'].includes(base.protocol) || base.username || base.password) throw new Error('The report service address is not configured correctly.');
   if (location.protocol === 'https:' && base.protocol !== 'https:') throw new Error('The report service needs a secure HTTPS address.');
   return new URL(path.replace(/^\//, ''), base);

@@ -5,11 +5,14 @@ const cookieName = 'sanaris_admin';
 const sessionLifetime = 8 * 60 * 60 * 1000;
 
 export function createApi({ databasePath, allowedOrigins = [], initialPassword = '' }) {
-  const store = openComplaintStore(databasePath);
-  if (initialPassword && !store.configured()) store.setPassword(initialPassword);
-  const origins = new Set(allowedOrigins.filter(origin => {
-    try { const url = new URL(origin); return ['https:', 'http:'].includes(url.protocol) && url.origin === origin; } catch { return false; }
+  const origins = new Set(allowedOrigins.filter(Boolean).map(origin => {
+    const url = new URL(origin);
+    if (!['https:', 'http:'].includes(url.protocol) || url.origin !== origin) throw new Error('SANARIS_ALLOWED_ORIGINS must contain exact http(s) origins without paths or trailing slashes.');
+    return origin;
   }));
+  const store = openComplaintStore(databasePath);
+  try { if (initialPassword && !store.configured()) store.setPassword(initialPassword); }
+  catch (error) { store.close(); throw error; }
   const sessions = new Map();
   const streams = new Set();
   const rateLimits = new Map();
@@ -77,7 +80,11 @@ export function createApi({ databasePath, allowedOrigins = [], initialPassword =
     try {
       const origin = request.headers.origin;
       const approved = origin && origins.has(origin);
-      const sameOrigin = origin && new URL(origin).host === request.headers.host;
+      let sameOrigin = false;
+      if (origin) {
+        try { sameOrigin = new URL(origin).host === request.headers.host; }
+        catch { throw new RequestError('Invalid request origin.', 403); }
+      }
       if (approved) {
         response.setHeader('Access-Control-Allow-Origin', origin);
         response.setHeader('Vary', 'Origin');

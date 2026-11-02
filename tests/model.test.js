@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {classify,validateSettings,defaults,reference,migrateSettings} from '../src/lib/model.js';
+import {classify,validateSettings,defaults,reference,migrateSettings} from '../docs/assets/js/model.js';
 test('threshold boundaries are consistent',()=>{assert.equal(classify(39.9),'Low');assert.equal(classify(40),'Moderate');assert.equal(classify(45),'High');assert.equal(classify(70,{moderate:60,high:80}),'Moderate');});
 test('reject invalid assessment settings',()=>{assert.ok(validateSettings(defaults));for(const s of [{moderate:70,high:55,interval:5},{moderate:55,high:55,interval:5},{moderate:29,high:70,interval:5},{moderate:55,high:121,interval:5},{moderate:55,high:70,interval:0}])assert.equal(validateSettings(s),false);});
 test('complaint references are distinct and well formed',()=>{const ids=Array.from({length:1000},reference);assert.equal(new Set(ids).size,1000);assert.match(ids[0],/^SAN-\d{4}-[A-F0-9]{12}$/);});

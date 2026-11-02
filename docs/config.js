@@ -4,5 +4,5 @@
 export const config = {
   apiBase: '',
   googleMapsApiKey: '', // Optional browser key restricted to your website URLs.
-  sensorFeedPath: '',  // Optional /api/v1/readings endpoint on the backend.
+  sensorFeedPath: '',  // Optional /api/admin/readings endpoint on the backend.
 };

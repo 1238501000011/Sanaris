@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { classify } from '../src/lib/model.js';
-import { parseReadings, mergeReadings, stationReadings } from '../src/lib/telemetry.js';
+import { classify } from '../docs/assets/js/model.js';
+import { parseReadings, mergeReadings, stationReadings } from '../docs/assets/js/telemetry.js';
 
 const now = Date.parse('2026-11-01T12:00:00Z');
 const packet = (nodeId, db, timestamp = now) => ({

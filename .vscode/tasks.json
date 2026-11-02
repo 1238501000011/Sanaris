@@ -22,7 +22,7 @@
       "group": { "kind": "build", "isDefault": true },
       "presentation": { "reveal": "always", "panel": "dedicated" },
       "problemMatcher": {
-        "owner": "sanaris-vite",
+        "owner": "sanaris",
         "pattern": {
           "regexp": "^(.+):(\\d+):(\\d+):\\s+(error|warning)\\s+(.*)$",
           "file": 1,

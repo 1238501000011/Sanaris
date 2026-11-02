@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process';
-import { resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { devIdentity, devIdentityPath } from '../server/devIdentity.js';
+import { loadEnvironment, backendOptions } from '../server/environment.js';
 
 export function parseDevOptions(args) {
   const options = { port: 5173, open: false, help: false };
@@ -90,7 +90,9 @@ export async function startDevServer(root, args) {
     return;
   }
   process.chdir(root);
-  const databasePath = process.env.SANARIS_DATABASE_PATH || resolve(root, 'data/sanaris.sqlite');
+  loadEnvironment(root);
+  const backend = backendOptions(root);
+  const { databasePath } = backend;
   const expected = devIdentity(root, databasePath);
   const origin = 'http://127.0.0.1:' + options.port;
   console.log('SANARIS: starting');
@@ -102,9 +104,7 @@ export async function startDevServer(root, args) {
   try {
     // The frontend is already browser-ready; no bundler or compiler is needed.
     const { createApplication } = await import('../server/application.js');
-    server = createApplication({ root, databasePath, development: true,
-      allowedOrigins: (process.env.SANARIS_ALLOWED_ORIGINS || '').split(',').map(value => value.trim()),
-      initialPassword: process.env.SANARIS_INITIAL_ADMIN_PASSWORD || '' });
+    server = createApplication({ ...backend, development: true });
     await server.listen(options.port);
   } catch (error) {
     await server?.close();
