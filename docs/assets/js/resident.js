@@ -1,6 +1,6 @@
-import { requestApi, watchResource } from './api.js?v=cloud-20261103';
-import { localDateTime, noiseCategories, referencePattern, validateResidentReport } from './residentForm.js?v=cloud-20261103';
-import { escapeHTML as e, icon, brand, badge, field, notice, downloadText, dateTime } from './ui.js?v=cloud-20261103';
+import { requestApi, watchResource } from './api.js?v=san-pablo-1';
+import { localDateTime, noiseCategories, referencePattern, validateResidentReport } from './residentForm.js?v=san-pablo-1';
+import { escapeHTML as e, icon, brand, badge, field, notice, downloadText, dateTime } from './ui.js?v=san-pablo-1';
 
 const root = document.querySelector('#app');
 const blankDraft = () => ({ location: '', category: '', incidentAt: '', description: '', consent: false });
@@ -32,8 +32,8 @@ function reportForm() {
     <form id="report-form" class="resident-report-form" novalidate aria-busy="${submitting}">
       <p class="resident-required">All fields are required.</p>
       <fieldset class="resident-form-section" ${submitting ? 'disabled' : ''}><legend><span>01</span>Location &amp; noise</legend>
-        ${field({ id: 'location', label: 'Where is the noise coming from?', hint: 'Include a street, purok, or familiar landmark in Hinabangan.', error: errors.location,
-          control: `<div class="resident-input-icon">${icon('pin', 18)}<input id="location" name="location" required maxlength="160" value="${e(draft.location)}" placeholder="e.g. Near the barangay hall, Purok 2" ${described('location')}></div>` })}
+        ${field({ id: 'location', label: 'Where is the noise coming from?', hint: 'Include a street, purok, or familiar landmark in Barangay San Pablo, Catbalogan City.', error: errors.location,
+          control: `<div class="resident-input-icon">${icon('pin', 18)}<input id="location" name="location" required maxlength="160" value="${e(draft.location)}" placeholder="e.g. Camia Street, near a familiar landmark" ${described('location')}></div>` })}
         <fieldset class="noise-options-field" aria-describedby="category-error"><legend>What type of noise is it?</legend>
           <div class="noise-options">${noiseCategories.map((category, i) => `<label class="noise-option ${draft.category === category ? 'is-selected' : ''}"><input type="radio" name="category" value="${e(category)}" required ${draft.category === category ? 'checked' : ''} ${errors.category ? 'aria-invalid="true"' : ''}><span class="noise-option-content">${icon(categoryIcons[i], 21)}<span>${e(category)}</span>${icon('check', 13, 'noise-choice-check')}</span></label>`).join('')}</div>
           <p id="category-error" class="field-error" ${errors.category ? '' : 'hidden'}>${e(errors.category)}</p></fieldset>
@@ -95,11 +95,11 @@ function render() {
   const tracking = page === 'track';
   document.title = `${tracking ? 'Track your report' : 'Resident reporting'} · SANARIS`;
   root.innerHTML = `<div class="resident-app"><a class="resident-skip" href="#resident-main" data-action="skip">Skip to content</a>
-    <header class="resident-header"><div class="resident-container resident-header-inner"><div class="resident-brand">${brand('#/report')}<span>RESIDENT SERVICES</span></div><div class="resident-location">${icon('pin', 17)}<span>Hinabangan, Samar<small>Community noise reporting</small></span></div></div></header>
+    <header class="resident-header"><div class="resident-container resident-header-inner"><div class="resident-brand">${brand('#/report')}<span>RESIDENT SERVICES</span></div><div class="resident-location">${icon('pin', 17)}<span>Barangay San Pablo, Catbalogan City<small>Community noise reporting</small></span></div></div></header>
     <main id="resident-main" tabindex="-1" class="resident-main resident-container"><div class="resident-intro"><p class="resident-kicker">${icon('shield', 15)} YOUR COMMUNITY. YOUR VOICE.</p><h1>${tracking ? 'Stay updated on your concern.' : 'Let’s make our community quieter.'}</h1><p>${tracking ? 'Follow your report from submission to resolution. No sign-in needed.' : 'Report a noise concern in a few simple steps. We’ll help you get it to the barangay.'}</p></div>
       <nav class="resident-navigation" aria-label="Resident services"><a href="#/report" ${page === 'report' ? 'aria-current="page"' : ''}>${icon('message', 19)}Report a concern</a><a href="#/track" ${tracking ? 'aria-current="page"' : ''}>${icon('list', 19)}Track a report</a></nav>
       ${page === 'missing' ? '<section class="resident-card resident-not-found"><h2>Page not found</h2><p>Return to the reporting form to send a concern.</p><a class="primary" href="#/report">Report a concern</a></section>' : `<div class="resident-layout">${tracking ? trackingForm() : receipt ? receiptView() : reportForm()}${help(tracking)}</div>`}
-    </main><footer class="resident-footer resident-container"><p><strong>SANARIS</strong><span>A quieter community, together.</span></p><span>Hinabangan, Samar · Resident services</span></footer></div>`;
+    </main><footer class="resident-footer resident-container"><p><strong>SANARIS</strong><span>A quieter community, together.</span></p><span>Barangay San Pablo, Catbalogan City · Resident services</span></footer></div>`;
   if (tracking) { trackResult = null; trackLoading = false; trackError = ''; renderTrackResult(); if (reference) startTracking(reference); }
 }
 function change(name, value) {
