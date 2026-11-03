@@ -1,4 +1,4 @@
-import { classify } from './model.js?v=camia-pins-1';
+import { classify } from './model.js?v=camia-clover-1';
 
 export const mapColors = { Low: '#20a38a', Moderate: '#e4a238', High: '#e25e68' };
 export const waitingColor = '#8190a5';

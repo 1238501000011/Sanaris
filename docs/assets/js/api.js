@@ -1,4 +1,4 @@
-import { config } from '../../config.js?v=camia-pins-1';
+import { config } from '../../config.js?v=camia-clover-1';
 export { config };
 let token = '';
 export function setToken(value) { token = typeof value === 'string' ? value : ''; }

@@ -1,8 +1,8 @@
-import { mapCenter } from './model.js?v=camia-pins-1';
-import { stationDisplay } from './mapDisplay.js?v=camia-pins-1';
-import { loadGoogleMaps, onGoogleMapsError } from './googleMaps.js?v=camia-pins-1';
-import { config } from './api.js?v=camia-pins-1';
-import { escapeHTML as e } from './ui.js?v=camia-pins-1';
+import { mapCenter } from './model.js?v=camia-clover-1';
+import { stationDisplay } from './mapDisplay.js?v=camia-clover-1';
+import { loadGoogleMaps, onGoogleMapsError } from './googleMaps.js?v=camia-clover-1';
+import { config } from './api.js?v=camia-clover-1';
+import { escapeHTML as e } from './ui.js?v=camia-clover-1';
 
 function hasPosition(node) { return Number.isFinite(node?.lat) && Number.isFinite(node?.lng); }
 function popup(node, settings) { const display = stationDisplay(node, settings); return `<div class="station-popup"><strong>${e(node.name)}</strong><p>${e(node.id)}</p><p>${e(display.reading)}</p><p>${e(display.time)}</p></div>`; }
@@ -30,7 +30,7 @@ export function createMonitoringMap(element, initial, onSelect) {
       const marker = markers.get(node.id), display = stationDisplay(node, current.settings), selected = current.selected === node.id;
       if (!marker) continue;
       if (type === 'leaflet') {
-        marker.setIcon(window.L.divIcon({ className: 'native-station-marker', html: `<span style="background:${display.color}" class="${selected ? 'selected' : ''}">${e(node.id.slice(-2))}</span>`, iconSize: [34, 34], iconAnchor: [17, 17] }));
+        marker.setIcon(window.L.divIcon({ className: 'native-station-marker', html: `<span data-leaf="${e(node.id)}" style="background:${display.color}" class="${selected ? 'selected' : ''}">${e(node.id.slice(-2))}</span>`, iconSize: [34, 34], iconAnchor: [17, 17] }));
         marker.setPopupContent(popup(node, current.settings)); marker.getElement()?.setAttribute('aria-label', `${node.name} · ${display.reading}`);
       } else if (type === 'google') { marker.button.style.backgroundColor = display.color; marker.button.classList.toggle('selected', selected); marker.button.setAttribute('aria-label', `${node.name} · ${display.reading}`); }
     }
@@ -46,7 +46,7 @@ export function createMonitoringMap(element, initial, onSelect) {
       instance = new maps.Map(element, { center: { lat: mapCenter[0], lng: mapCenter[1] }, zoom: 17, gestureHandling: 'cooperative', mapTypeControl: true, streetViewControl: false });
       const info = new maps.InfoWindow();
       class Station extends maps.OverlayView {
-        constructor(node) { super(); this.position = new maps.LatLng(node.lat, node.lng); this.button = document.createElement('button'); this.button.type = 'button'; this.button.className = 'google-station-marker'; this.button.textContent = node.id.slice(-2); this.button.onclick = () => { const latest = current.readings.find(item => item.id === node.id); info.setContent(popup(latest, current.settings)); info.setPosition(this.position); info.open({ map: instance, shouldFocus: false }); onSelect(node.id); }; this.setMap(instance); }
+        constructor(node) { super(); this.position = new maps.LatLng(node.lat, node.lng); this.button = document.createElement('button'); this.button.type = 'button'; this.button.className = 'google-station-marker'; this.button.dataset.leaf = node.id; this.button.textContent = node.id.slice(-2); this.button.onclick = () => { const latest = current.readings.find(item => item.id === node.id); info.setContent(popup(latest, current.settings)); info.setPosition(this.position); info.open({ map: instance, shouldFocus: false }); onSelect(node.id); }; this.setMap(instance); }
         onAdd() { this.getPanes().overlayMouseTarget.append(this.button); maps.OverlayView.preventMapHitsAndGesturesFrom(this.button); }
         draw() { const point = this.getProjection().fromLatLngToDivPixel(this.position); if (point) { this.button.style.left = point.x + 'px'; this.button.style.top = point.y + 'px'; } }
         onRemove() { this.button.remove(); }

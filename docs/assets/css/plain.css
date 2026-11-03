@@ -33,3 +33,9 @@
 .resident-tracking-result .tracking-status .badge { align-self: center; }
 @media (max-width: 540px) { .classification-chart { flex-direction: column; gap: 14px; padding: 15px 0; } .classification-chart svg { flex-basis: auto; } }
 @media (max-width: 400px) { .node-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* Each numbered leaf points toward the center of the four planned sites. */
+.native-station-marker > [data-leaf="ESP-01"], .google-station-marker[data-leaf="ESP-01"] { border-radius: 55% 55% 12% 55%; }
+.native-station-marker > [data-leaf="ESP-02"], .google-station-marker[data-leaf="ESP-02"] { border-radius: 55% 55% 55% 12%; }
+.native-station-marker > [data-leaf="ESP-03"], .google-station-marker[data-leaf="ESP-03"] { border-radius: 12% 55% 55% 55%; }
+.native-station-marker > [data-leaf="ESP-04"], .google-station-marker[data-leaf="ESP-04"] { border-radius: 55% 12% 55% 55%; }
