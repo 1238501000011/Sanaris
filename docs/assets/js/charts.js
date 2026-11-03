@@ -1,5 +1,5 @@
-import { classify } from './model.js?v=camia-clover-1';
-import { escapeHTML as e, empty } from './ui.js?v=camia-clover-1';
+import { classify } from './model.js?v=signal-1';
+import { escapeHTML as e, empty } from './ui.js?v=signal-1';
 const colors = { Low: '#20a38a', Moderate: '#e4a238', High: '#e25e68' };
 export function trendChart(data, settings, message) {
   if (!data.length) return empty(message || 'Awaiting sensor data');

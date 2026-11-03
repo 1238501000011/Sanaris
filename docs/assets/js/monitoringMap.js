@@ -1,8 +1,8 @@
-import { mapCenter } from './model.js?v=camia-clover-1';
-import { stationDisplay } from './mapDisplay.js?v=camia-clover-1';
-import { loadGoogleMaps, onGoogleMapsError } from './googleMaps.js?v=camia-clover-1';
-import { config } from './api.js?v=camia-clover-1';
-import { escapeHTML as e } from './ui.js?v=camia-clover-1';
+import { mapCenter } from './model.js?v=signal-1';
+import { stationDisplay } from './mapDisplay.js?v=signal-1';
+import { loadGoogleMaps, onGoogleMapsError } from './googleMaps.js?v=signal-1';
+import { config } from './api.js?v=signal-1';
+import { escapeHTML as e } from './ui.js?v=signal-1';
 
 function hasPosition(node) { return Number.isFinite(node?.lat) && Number.isFinite(node?.lng); }
 function popup(node, settings) { const display = stationDisplay(node, settings); return `<div class="station-popup"><strong>${e(node.name)}</strong><p>${e(node.id)}</p><p>${e(display.reading)}</p><p>${e(display.time)}</p></div>`; }

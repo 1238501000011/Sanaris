@@ -1,9 +1,9 @@
-import { requestApi, watchResource, setToken, config } from './api.js?v=camia-clover-1';
-import { defaults, migrateSettings, validateSettings, classify, nodes } from './model.js?v=camia-clover-1';
-import { parseReadings, mergeReadings, stationReadings } from './telemetry.js?v=camia-clover-1';
-import { escapeHTML as e, icon, brand, heading, panel, badge, empty, notice, field, downloadText, dateTime } from './ui.js?v=camia-clover-1';
-import { trendChart, classificationChart } from './charts.js?v=camia-clover-1';
-import { createMonitoringMap } from './monitoringMap.js?v=camia-clover-1';
+import { requestApi, watchResource, setToken, config } from './api.js?v=signal-1';
+import { defaults, migrateSettings, validateSettings, classify, nodes } from './model.js?v=signal-1';
+import { parseReadings, mergeReadings, stationReadings } from './telemetry.js?v=signal-1';
+import { escapeHTML as e, icon, brand, heading, panel, badge, empty, notice, field, downloadText, dateTime } from './ui.js?v=signal-1';
+import { trendChart, classificationChart } from './charts.js?v=signal-1';
+import { createMonitoringMap } from './monitoringMap.js?v=signal-1';
 
 const root = document.getElementById('app');
 const routes = [['overview', 'Overview', 'grid'], ['map', 'Monitoring map', 'pin'], ['events', 'Event history', 'clock'], ['alerts', 'Disturbance alerts', 'bell'], ['analytics', 'Noise analytics', 'chart'], ['complaints', 'Resident complaints', 'message'], ['settings', 'Assessment settings', 'settings']];

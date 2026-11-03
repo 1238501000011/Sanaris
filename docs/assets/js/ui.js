@@ -30,7 +30,7 @@ const paths = {
   chevron: '<path d="m6 9 6 6 6-6"/>', plus: '<path d="M12 4v16M4 12h16"/>',
 };
 export function icon(name, size = 19, className = '') { return `<svg class="icon ${escapeHTML(className)}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name] || paths.sound}</svg>`; }
-export function brand(href = '#/admin/overview') { return `<a href="${escapeHTML(href)}" class="brand"><span class="brand-tile"><img class="brand-logo" src="${new URL('assets/sanaris-logo.png', siteRoot)}" alt="" width="160" height="160"></span><strong class="brand-name">SANARIS</strong></a>`; }
+export function brand(href = '#/admin/overview') { return `<a href="${escapeHTML(href)}" class="brand"><span class="brand-tile"><img class="brand-logo" src="${new URL('assets/sanaris-logo.png?v=signal-1', siteRoot)}" alt="" width="160" height="160"></span><strong class="brand-name">SANARIS</strong></a>`; }
 export const badge = value => `<span class="badge ${escapeHTML(String(value).toLowerCase().replaceAll(' ', '-'))}">${escapeHTML(value)}</span>`;
 export const empty = message => `<div class="empty">${escapeHTML(message)}</div>`;
 export const notice = (message, success = false) => `<div class="${success ? 'form-success' : 'form-notice'}" role="${success ? 'status' : 'alert'}">${icon(success ? 'check' : 'alert')}<p>${escapeHTML(message)}</p></div>`;

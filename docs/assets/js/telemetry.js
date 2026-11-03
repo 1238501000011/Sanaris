@@ -1,4 +1,4 @@
-import { nodes } from './model.js?v=camia-clover-1';
+import { nodes } from './model.js?v=signal-1';
 
 const stationIds = new Set(nodes.map(node => node.id));
 const historyLimit = 120;

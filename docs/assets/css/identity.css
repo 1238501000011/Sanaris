@@ -1,0 +1,44 @@
+/* Shared visual identity for the monitoring workspace and resident services. */
+:root {
+  --signal-blue: #184aaa;
+  --signal-violet: #5833a4;
+  --signal-gradient: linear-gradient(110deg, var(--signal-blue), var(--signal-violet));
+}
+.sidebar, .access-story {
+  background: radial-gradient(ellipse at 95% 0, #354389, transparent 55%), linear-gradient(165deg, #12294c, #261c45);
+}
+.sidebar nav a { border-radius: 10px; }
+.sidebar nav a.active, .sidebar nav a.active:hover {
+  background: var(--signal-gradient);
+  box-shadow: inset 3px 0 #80deff;
+}
+.main-shell, .access-page, .resident-app {
+  background: radial-gradient(ellipse at 100% 0, #ece7fb, transparent 48%), #f3f7fc;
+}
+.page-heading {
+  padding: clamp(16px, 2.5vw, 28px);
+  border: 1px solid #d9dfee;
+  border-inline-start: 4px solid #5751af;
+  border-radius: 14px;
+  background: linear-gradient(115deg, #fff 30%, #edf4ff 75%, #efeafd);
+}
+.node-card.selected { border-color: #6753ae; box-shadow: 0 0 0 2px #6557bc22; }
+.access-lock, .resident-section-icon, .resident-form-section > legend > span {
+  color: #49368e;
+  background: #f0edfc;
+  border-color: #dad3f4;
+}
+.primary:not(:disabled), .resident-navigation a[aria-current=page] {
+  color: #fff;
+  background: var(--signal-gradient);
+  border-color: transparent;
+}
+.primary:not(:disabled):hover { filter: brightness(1.08); }
+.access-story h2 span { color: #bcd5ff; }
+.resident-intro {
+  border-inline-start: 4px solid #5851ac;
+  padding-inline-start: clamp(14px, 2vw, 24px);
+}
+.resident-app .resident-header { border-bottom: 2px solid #d7d6ef; }
+.brand .brand-tile { overflow: hidden; background: white; }
+.brand .brand-tile .brand-logo { object-fit: contain; filter: none; }
