@@ -1,6 +1,6 @@
-import { requestApi, watchResource } from './api.js?v=san-pablo-1';
-import { localDateTime, noiseCategories, referencePattern, validateResidentReport } from './residentForm.js?v=san-pablo-1';
-import { escapeHTML as e, icon, brand, badge, field, notice, downloadText, dateTime } from './ui.js?v=san-pablo-1';
+import { requestApi, watchResource } from './api.js?v=camia-pins-1';
+import { localDateTime, noiseCategories, referencePattern, validateResidentReport } from './residentForm.js?v=camia-pins-1';
+import { escapeHTML as e, icon, brand, badge, field, notice, downloadText, dateTime } from './ui.js?v=camia-pins-1';
 
 const root = document.querySelector('#app');
 const blankDraft = () => ({ location: '', category: '', incidentAt: '', description: '', consent: false });

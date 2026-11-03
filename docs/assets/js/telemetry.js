@@ -1,4 +1,4 @@
-import { nodes } from './model.js?v=san-pablo-1';
+import { nodes } from './model.js?v=camia-pins-1';
 
 const stationIds = new Set(nodes.map(node => node.id));
 const historyLimit = 120;
