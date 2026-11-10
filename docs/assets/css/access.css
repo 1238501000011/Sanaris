@@ -104,7 +104,7 @@ main.access-page {
 .access-security { display: flex; justify-content: center; align-items: center; gap: 7px; padding-top: 18px; margin-top: 22px; border-top: 1px solid #edf0f6; color: #66758c; font-size: 11px; line-height: 1.6; text-align: center; }
 .access-security svg { flex: none; }
 .access-page .access-footer { width: min(920px, calc(100% - 40px)); margin: 14px auto 0; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; border: 0; text-align: center; color: #596a83; font-size: 11px; line-height: 1.65; letter-spacing: 0; }
-.access-footer span { display: flex; align-items: center; justify-content: center; gap: 5px; }
+.access-page .access-footer > span { display: flex; align-items: center; justify-content: center; gap: 5px; margin-inline: 0; width: auto; }
 @media (min-width: 1500px) and (min-height: 850px) {
   .access-hero { padding-top: 40px; padding-bottom: 102px; }
   .access-content { margin-top: -58px; }
