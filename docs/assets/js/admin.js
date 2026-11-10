@@ -3,7 +3,7 @@ let overviewPeriod = 'Today';
 import { requestApi, watchResource, setToken, config } from './api.js?v=signal-1';
 import { defaults, migrateSettings, validateSettings, classify, nodes } from './model.js?v=two-stations-1';
 import { parseReadings, mergeReadings, stationReadings } from './telemetry.js?v=two-stations-1';
-import { escapeHTML as e, icon, brand, heading, panel, badge, empty, notice, field, downloadText, dateTime, siteRoot } from './ui.js?v=signal-1';
+import { escapeHTML as e, icon, brand, heading, panel, badge, empty, notice, field, downloadText, dateTime } from './ui.js?v=signal-1';
 import { trendChart, classificationChart } from './charts.js?v=overview-2';
 import { createMonitoringMap } from './monitoringMap.js?v=two-stations-1';
 import { parseStationDetails, mergeStationDetails, detailIsRecent, stationDetailPanel } from './stationDetails.js?v=station-detail-1';
@@ -35,7 +35,6 @@ function login() {
     id: 'email', label: 'Admin Email',
     control: '<input id="email" name="email" type="email" autocomplete="username" required maxlength="254" placeholder="you@example.com">',
   }) : '';
-  const illustration = new URL('assets/sanaris-monitoring-officer.png', siteRoot);
   root.innerHTML = `<main class="access-page">
     <section class="access-hero" aria-labelledby="welcome-title">
       <div class="access-hero-art" aria-hidden="true">
@@ -63,10 +62,6 @@ function login() {
         ${state.sessionError ? '<button type="button" class="secondary access-retry" data-action="retry-session">Try connection again</button>' : ''}
         <p class="access-security">${icon('lock', 14)}Authorized Barangay Officials Only</p>
       </section>
-      <figure class="access-illustration">
-        <img src="${illustration}" width="1254" height="1254" alt="A barangay monitoring officer holding a tablet beside a proposed solar-powered acoustic monitoring device." fetchpriority="high" decoding="async">
-        <figcaption>Proposed monitoring hardware · Concept illustration</figcaption>
-      </figure>
     </div>
     <footer class="access-footer">
       <p>Sound Assessment and Nighttime Acoustic Recording Intelligent System</p>

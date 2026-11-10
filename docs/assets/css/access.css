@@ -56,11 +56,10 @@ main.access-page {
 .access-content {
   position: relative;
   z-index: 1;
-  width: min(920px, calc(100% - 48px));
+  width: min(420px, calc(100% - 48px));
   display: grid;
-  grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
-  gap: clamp(24px, 5vw, 72px);
   margin: -48px auto 0;
   flex: 1;
 }
@@ -104,15 +103,11 @@ main.access-page {
 .access-retry { display: flex; width: fit-content; margin: 14px auto 0; }
 .access-security { display: flex; justify-content: center; align-items: center; gap: 7px; padding-top: 18px; margin-top: 22px; border-top: 1px solid #edf0f6; color: #66758c; font-size: 11px; line-height: 1.6; text-align: center; }
 .access-security svg { flex: none; }
-.access-illustration { margin: 24px 0 0; min-width: 0; text-align: center; align-self: end; }
-.access-illustration img { width: 100%; height: auto; max-height: 400px; object-fit: contain; display: block; }
-.access-illustration figcaption { font-size: 10px; color: #62718b; line-height: 1.6; margin-top: 10px; }
 .access-page .access-footer { width: min(920px, calc(100% - 40px)); margin: 14px auto 0; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; border: 0; text-align: center; color: #596a83; font-size: 11px; line-height: 1.65; letter-spacing: 0; }
 .access-footer span { display: flex; align-items: center; justify-content: center; gap: 5px; }
 @media (min-width: 1500px) and (min-height: 850px) {
   .access-hero { padding-top: 40px; padding-bottom: 102px; }
-  .access-content { max-width: 1000px; gap: 80px; margin-top: -58px; }
-  .access-illustration img { max-height: 520px; }
+  .access-content { margin-top: -58px; }
 }
 @media (max-width: 700px) {
   .access-hero { padding: 22px 20px 70px; border-radius: 0 0 50% 50% / 0 0 28px 28px; }
@@ -122,11 +117,8 @@ main.access-page {
   .access-hero h1 { letter-spacing: -.7px; }
   .access-wave-left { left: -20px; }
   .access-wave-right { right: -22px; }
-  .access-content { width: min(420px, calc(100% - 32px)); grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: -38px; }
+  .access-content { width: min(420px, calc(100% - 32px)); margin-top: -38px; }
   .access-form-panel { padding: 24px; }
-  .access-illustration { margin: 0 auto; width: 180px; }
-  .access-illustration img { max-height: 180px; }
-  .access-illustration figcaption { display: none; }
 }
 @media (max-width: 370px) {
   .access-form-panel { padding: 22px 18px; }
