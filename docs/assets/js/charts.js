@@ -11,11 +11,12 @@ export function trendChart(data, settings, message) {
   const points = values.map((item, index) => `${x(index)},${y(item.db)}`).join(' ');
   const ticks = [0, .25, .5, .75, 1].map(part => `<g><line x1="${left}" x2="${width - right}" y1="${y(part * maximum)}" y2="${y(part * maximum)}" stroke="#e8eef6"/><text x="${left - 9}" y="${y(part * maximum) + 4}" text-anchor="end">${Math.round(part * maximum)}</text></g>`).join('');
   return `<div class="native-chart"><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Noise measurements in dB(A); high threshold ${settings.high}">
-    ${ticks}<line x1="${left}" x2="${width - right}" y1="${y(settings.high)}" y2="${y(settings.high)}" stroke="#cf8350" stroke-dasharray="5 5"/>
-    <polyline points="${points}" fill="none" stroke="#447dd6" stroke-width="2.5"/>
+    <text x="4" y="13">dBA</text>
+    ${ticks}<line x1="${left}" x2="${width - right}" y1="${y(settings.high)}" y2="${y(settings.high)}" stroke="#6535D5" stroke-dasharray="5 5"/>
+    <polyline points="${points}" fill="none" stroke="#1268DB" stroke-width="2.5"/>
     ${values.map((item, index) => `<circle cx="${x(index)}" cy="${y(item.db)}" r="4" fill="${colors[classify(item.db, settings)]}" tabindex="0" aria-label="${e(new Date(item.timestamp).toLocaleTimeString())}: ${item.db.toFixed(1)} dB(A)"><title>${e(new Date(item.timestamp).toLocaleString())} · ${item.db.toFixed(1)} dB(A)</title></circle>`).join('')}
     <text x="${left}" y="${height - 10}">${e(new Date(values[0].timestamp).toLocaleTimeString())}</text><text x="${width - right}" y="${height - 10}" text-anchor="end">${e(new Date(values.at(-1).timestamp).toLocaleTimeString())}</text>
-  </svg><p class="small muted">Hover or focus a point for its reading. Dashed line: ${settings.high} dB(A).</p></div>`;
+  <text x="320" y="250" text-anchor="middle">Time</text></svg><p class="small muted">Hover or focus a point for its reading. Dashed line: ${settings.high} dB(A).</p></div>`;
 }
 export function classificationChart(samples, settings, message) {
   if (!samples.length) return empty(message || 'Awaiting sensor data');

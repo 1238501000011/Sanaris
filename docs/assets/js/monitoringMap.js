@@ -1,4 +1,4 @@
-import { mapCenter } from './model.js?v=signal-1';
+import { mapCenter } from './model.js?v=two-stations-1';
 import { stationDisplay } from './mapDisplay.js?v=signal-1';
 import { loadGoogleMaps, onGoogleMapsError } from './googleMaps.js?v=signal-1';
 import { config } from './api.js?v=signal-1';

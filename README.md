@@ -2,7 +2,7 @@
 
 SANARIS uses **plain HTML, CSS, and browser JavaScript**. There is no React, JSX, Vite, Tailwind, or npm frontend dependency. The browser-ready website is in `docs/`; GitHub Pages can publish that folder directly. A separate backend keeps resident reports shared across devices and protects the admin inbox: Node.js/SQLite locally, or Supabase for GitHub Pages.
 
-The admin and resident sites have separate entry points. Residents need no account. No sensor readings are generated: stations wait for a configured hardware feed. The default high classification starts at **45 dB(A)**. The map is centered on Hinabangan, Samar; the four station positions are illustrative until surveyed.
+The admin and resident sites have separate entry points. Residents need no account. No sensor readings are generated: stations wait for a configured hardware feed. The default high classification starts at **45 dB(A)**. The map is centered on Camia Street in Barangay San Pablo, Catbalogan City. Two planned stations, ESP-01 and ESP-02, await confirmed installation positions and hardware measurements.
 
 ## Run locally
 
@@ -146,8 +146,42 @@ No ESP32 is connected by this project. The frontend is ready to consume a hardwa
    ]
    ```
 
-   This is the expected packet format only, not a live reading. Valid node IDs are `ESP-01` through `ESP-04`; timestamps should be ISO 8601 UTC. An endpoint on the same backend can reuse the admin authentication guard in `server/api.js`.
+   This is the expected packet format only, not a live reading. Valid node IDs are `ESP-01` and `ESP-02`; timestamps should be ISO 8601 UTC. An endpoint on the same backend can reuse the admin authentication guard in `server/api.js`.
 4. Set `sensorFeedPath: '/api/admin/readings'` in `docs/config.js`. The dashboard polls it using the chosen interval. Unknown nodes, invalid levels, future/invalid timestamps, and non-hardware records are rejected. A failed feed is shown as unavailable, not zero noise.
+
+Click a station card or map marker to open its TinyML + INAE panel. The same
+gateway array can include optional device metadata. The following is a packet
+format example for integration, with illustrative values only:
+
+```json
+{
+  "nodeId": "ESP-01",
+  "source": "hardware",
+  "measuredAt": "2026-11-04T05:08:00Z",
+  "receivedAt": "2026-11-04T05:08:01Z",
+  "detectedSound": "vehicle noise",
+  "confidence": 0.996,
+  "microphoneDbfs": -25.8,
+  "inaeDecision": "MONITORING",
+  "quietHours": false,
+  "deviceTime": "2026-11-04T13:08:00+08:00",
+  "rtcValid": true,
+  "sdOnline": false
+}
+```
+
+Use timezone-qualified ISO timestamps. `receivedAt` is the gateway's actual
+receipt time and is optional. Confidence is a fraction from 0 to 1. The firmware
+supplies the INAE decision and quiet-hours flag. Missing metadata displays as
+awaiting or unknown. A newer partial packet replaces the prior snapshot, so old
+decisions cannot appear as fresh data. Device time is displayed in Philippine
+time, and snapshots older than one minute are marked as last received data.
+
+`microphoneDbfs` is a digital microphone level at or below 0 dBFS. Calibrated
+`laeqDbA` remains optional in this packet and is required for dBA charts and
+threshold alerts. Digital microphone levels are displayed only in the station
+detail panel. This UI extension requires the existing gateway feed to supply
+the optional fields before device values can appear.
 5. Update surveyed station coordinates in `docs/assets/js/model.js`. Test packet loss, stale timestamps, duplicate batches, and threshold boundaries using real calibrated equipment.
 
 The frontend retains up to 120 unique timestamped samples per node for the current admin session. Readings older than 60 seconds are shown as last readings; they do not create current disturbance alerts. Refreshing loses this in-memory sensor history unless the backend returns it again. The displayed arithmetic mean of dB values is a descriptive summary, not an energy-averaged acoustic exposure metric. The configurable 45 dB(A) per-reading cutoff is an application policy, not proof of a legal violation or a complete WHO nighttime assessment.

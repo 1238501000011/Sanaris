@@ -5,13 +5,11 @@ export function migrateSettings(saved) {
   if (saved.version === defaults.version) return validateSettings(saved) ? saved : { ...defaults };
   return { ...defaults, interval: [2, 5, 10].includes(saved.interval) ? saved.interval : defaults.interval };
 }
-// Four proposed sites around a center point on Camia Street, clockwise from northwest.
-export const mapCenter = [11.77974, 124.88308];
+// Two proposed sites around a center point on Camia Street.
+export const mapCenter = [11.77998, 124.88308];
 const plannedPositions = [
   [11.77998, 124.882835],
   [11.77998, 124.883325],
-  [11.77950, 124.883325],
-  [11.77950, 124.882835],
 ];
 export const nodes = plannedPositions.map(([lat, lng], index) => ({
   id: `ESP-0${index + 1}`, name: `Planned station ${index + 1}`, area: 'Camia Street', lat, lng,

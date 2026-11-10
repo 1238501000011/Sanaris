@@ -1,4 +1,4 @@
-import { nodes } from './model.js?v=signal-1';
+import { nodes } from './model.js?v=two-stations-1';
 
 const stationIds = new Set(nodes.map(node => node.id));
 const historyLimit = 120;
@@ -22,7 +22,8 @@ export function parseReadings(payload, now) {
 export function mergeReadings(previous, incoming) {
   const byStation = new Map(nodes.map(node => [node.id, new Map()]));
   for (const reading of [...previous, ...incoming]) {
-    byStation.get(reading.nodeId).set(reading.timestamp, reading);
+    const station = byStation.get(reading.nodeId);
+    if (station) station.set(reading.timestamp, reading);
   }
   const chronological = (a, b) => a.timestamp - b.timestamp;
   return [...byStation.values()]

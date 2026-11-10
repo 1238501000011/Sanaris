@@ -8,9 +8,9 @@ const packet = (nodeId, db, timestamp = now) => ({
   nodeId, laeqDbA: db, measuredAt: new Date(timestamp).toISOString(), source: 'hardware',
 });
 
-test('empty feed leaves four unclassified stations awaiting data', () => {
+test('empty feed leaves two configured stations awaiting data', () => {
   const stations = stationReadings([], now);
-  assert.equal(stations.length, 4);
+  assert.deepEqual(stations.map(node => node.id), ['ESP-01', 'ESP-02']);
   assert.ok(stations.every(node => node.db === null && node.timestamp === null && node.status === 'Awaiting sensor data'));
   assert.equal(classify(stations[0].db), null);
 });
@@ -18,7 +18,8 @@ test('empty feed leaves four unclassified stations awaiting data', () => {
 test('only known hardware measurements with finite levels and valid times enter history', () => {
   const samples = parseReadings([
     packet('ESP-01', 0), { ...packet('ESP-02', 88), source: 'simulated' },
-    packet('UNKNOWN', 44), packet('ESP-03', null), packet('ESP-04', '45'),
+    packet('UNKNOWN', 44), packet('ESP-01', null), packet('ESP-02', '45'),
+    packet('ESP-03', 44), packet('ESP-04', 44),
     { ...packet('ESP-02', 44), measuredAt: 'invalid' }, packet('ESP-02', 46, now + 1), null,
   ], now);
   assert.deepEqual(samples, [{ nodeId: 'ESP-01', db: 0, timestamp: now }]);
@@ -31,10 +32,16 @@ test('partial, delayed and repeated batches retain separate station histories an
   const merged = mergeReadings(first, next);
   assert.deepEqual(merged.map(sample => sample.timestamp), [now - 1000, now, now]);
   const stations = stationReadings(merged, now);
-  assert.deepEqual(stations.map(node => classify(node.db)), ['High', 'Moderate', null, null]);
+  assert.deepEqual(stations.map(node => classify(node.db)), ['High', 'Moderate']);
   assert.equal(stations.filter(node => node.status === 'Recent').length, 2);
   assert.equal(stationReadings(merged, now + 60_001)[0].status, 'Last reading');
   assert.equal(stationReadings(merged, now, true)[0].status, 'Last reading');
+});
+
+test('retired station samples cannot break the two-station feed', () => {
+  const active = { nodeId: 'ESP-01', db: 42, timestamp: now };
+  const retired = { nodeId: 'ESP-03', db: 44, timestamp: now };
+  assert.deepEqual(mergeReadings([retired], [active]), [active]);
 });
 
 test('a busy station cannot evict the last measurement from another station', () => {
