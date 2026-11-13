@@ -1,4 +1,4 @@
-import { dashboardHeader, localClock, metric, overviewAnalytics, overviewPlots, reportMetric, residentPanel } from './overview.js?v=mic-feed-1';
+import { dashboardHeader, localClock, metric, overviewAnalytics, overviewPlots, reportMetric, residentPanel, microphoneChart, soundCategories } from './overview.js?v=analytics-mic-2';
 let overviewPeriod = 'Today';
 import { requestApi, watchResource, setToken, config } from './api.js?v=signal-1';
 import { defaults, migrateSettings, validateSettings, classify, nodes } from './model.js?v=two-stations-1';
@@ -119,11 +119,33 @@ function renderEvents() { const rows = eventRows(); put('event-rows', rows.lengt
 function eventsPage() { return heading('Event history', 'Explore measurements received from the monitoring stations.', `<button class="secondary" data-action="export">${icon('download', 16)} Export CSV</button>`) + panel('Monitoring log', 'Rolling session history', `<div class="filters"><select id="node-filter" aria-label="Filter node">${options(['All', ...nodes.map(node => node.id)], state.nodeFilter, { All: 'All nodes', ...Object.fromEntries(nodes.map(node => [node.id, node.name])) })}</select><select id="level-filter" aria-label="Filter level">${options(['All', 'Low', 'Moderate', 'High'], state.levelFilter)}</select></div><div id="event-rows"></div>`); }
 function renderAlerts() { const high = readings().filter(node => node.status === 'Recent' && classify(node.db, state.settings) === 'High'); put('alert-list', high.length ? high.map(node => `<article class="alert-row"><span class="alert-icon">${icon('bell', 22)}</span><div><h3>${node.name}</h3><p>${node.db.toFixed(1)} dB(A) · ${node.id} · ${e(dateTime(node.timestamp))}</p><p class="small muted">${state.acknowledged.has(node.id) ? 'Acknowledged for this session.' : 'Review the time and duration of this event.'}</p></div><button class="secondary" data-ack="${node.id}" ${state.acknowledged.has(node.id) ? 'disabled' : ''}>${state.acknowledged.has(node.id) ? 'Acknowledged' : 'Acknowledge'}</button></article>`).join('') : empty(readings().some(node => node.status === 'Recent') ? 'No recent station readings reach the high threshold.' : feedStatus())); }
 function renderAnalytics() {
-  const samples = state.samples.filter(item => item.timestamp >= Date.now() - state.range * 60000), message = state.samples.length ? 'No readings in this period.' : feedStatus();
-  put('analytics-trend', trendChart(samples.filter(item => item.nodeId === state.selected), state.settings, message)); put('analytics-classification', classificationChart(samples, state.settings, message));
-  put('node-comparison', samples.length ? `<div class="comparison-grid">${nodes.map(node => { const values = samples.filter(item => item.nodeId === node.id).map(item => item.db); return `<div><p class="muted">${node.name}</p>${values.length ? `<h2>${(values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(1)} <small>dB(A)</small></h2><p class="small muted">Peak ${Math.max(...values).toFixed(1)} dB(A)</p>` : '<p class="small muted">No readings in this period.</p>'}</div>`; }).join('')}</div>` : empty(message));
+  const start = Date.now() - state.range * 60000;
+  const samples = state.samples.filter(item => item.timestamp >= start);
+  const history = (state.telemetryHistory || []).filter(item => item.measuredAt >= start);
+  const selected = samples.filter(item => item.nodeId === state.selected);
+  const mic = history.filter(item => item.nodeId === state.selected && Number.isFinite(item.microphoneDbfs));
+  const message = state.unavailable ? 'Sensor feed unavailable. Showing saved session data when available.' : 'No readings for this station in the selected period.';
+  const stale = state.unavailable ? '<p class="small muted">Feed unavailable. Previously received data is shown.</p>' : '';
+  put('analytics-trend', stale + (selected.length ? trendChart(selected, state.settings) : mic.length ? microphoneChart(mic) : empty(message)));
+  put('analytics-classification', stale + soundCategories(history));
+  put('node-comparison', stale + '<div class="comparison-grid">' + nodes.map(node => {
+    const calibrated = samples.filter(item => item.nodeId === node.id);
+    const digital = history.filter(item => item.nodeId === node.id && Number.isFinite(item.microphoneDbfs));
+    const items = calibrated.length ? calibrated : digital;
+    if (!items.length) return '<div><p class="muted">' + e(node.name) + ' · ' + e(node.id) + '</p><p class="small muted">No readings in this period.</p></div>';
+    const isCalibrated = calibrated.length > 0;
+    const level = item => isCalibrated ? item.db : item.microphoneDbfs;
+    const latest = items.at(-1);
+    const unit = isCalibrated ? 'dBA' : 'dBFS';
+    return '<div><p class="muted">' + e(node.name) + ' · ' + e(node.id) + '</p><h2>' + level(latest).toFixed(1) + ' <small>' + unit + '</small></h2><p class="small muted">Latest reading · Peak ' + Math.max(...items.map(level)).toFixed(1) + ' ' + unit + '</p><p class="small muted">' + items.length + ' records · ' + e(dateTime(isCalibrated ? latest.timestamp : latest.measuredAt)) + '</p><p class="small muted">' + (isCalibrated ? 'Calibrated sound level' : 'Uncalibrated microphone level; not a dBA comparison.') + '</p></div>';
+  }).join('') + '</div>');
 }
-function analyticsPage() { return heading('Noise analytics', 'Explore sound levels measured across the community.', `<select id="analytics-range" aria-label="Analytics time range">${options([60, 15, 5], state.range, { 60: 'Last 60 minutes', 15: 'Last 15 minutes', 5: 'Last 5 minutes' })}</select>`) + `<div class="two-col">${panel('Noise trend', 'Measured samples, not an acoustic exposure average.', '<div id="analytics-trend"></div>', `<select id="analytics-node" aria-label="Analytics node">${options(nodes.map(node => node.id), state.selected, Object.fromEntries(nodes.map(node => [node.id, node.name])))}</select>`)}${panel('Noise classification', 'Measured samples across all stations', '<div id="analytics-classification"></div>')}</div>${summary()}${panel('Node comparison', 'Arithmetic mean and highest reading per station', '<div id="node-comparison"></div>')}`; }
+function analyticsPage() {
+  return heading('Noise analytics', 'Received station readings. Digital microphone levels and calibrated sound levels are shown separately.', `<select id="analytics-range" aria-label="Analytics time range">${options([60, 15, 5], state.range, { 60: 'Last 60 minutes', 15: 'Last 15 minutes', 5: 'Last 5 minutes' })}</select>`) +
+    `<div class="two-col">${panel('Noise trend', 'Available microphone dBFS or calibrated dBA · check chart units.', '<div id="analytics-trend"></div>', `<select id="analytics-node" aria-label="Analytics node">${options(nodes.map(node => node.id), state.selected, Object.fromEntries(nodes.map(node => [node.id, node.name])))}</select>`)}${panel('Sound classification', 'Actual TinyML categories from received records', '<div id="analytics-classification"></div>')}</div>` +
+    '<p class="note">The current bench test sends uncalibrated dBFS. dBA thresholds and nighttime exposure assessment do not apply to these digital levels.</p>' +
+    panel('Node comparison', 'Latest and highest received level per station · selected time range', '<div id="node-comparison"></div>');
+}
 function legacy() { if (state.session?.authMode === 'email') return []; const items = saved('sanaris-complaints', []); return Array.isArray(items) ? items.filter(item => item && !['SAN-DEMO-0001','SAN-2026-A1B2C3D4E5F6','SAN-2026-F6E5D4C3B2A1','SAN-2026-C3D4E5F6A1B2'].includes(item.id) && !state.complaints.some(record => record.id === item.id)) : []; }
 function renderInbox() {
   const filtered = state.complaints.filter(item => (state.statusFilter === 'All' || item.status === state.statusFilter) && `${item.id} ${item.location} ${item.category}`.toLowerCase().includes(state.search.toLowerCase()));
