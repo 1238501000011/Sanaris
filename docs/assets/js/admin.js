@@ -1,4 +1,4 @@
-import { dashboardHeader, localClock, metric, overviewAnalytics, overviewPlots, reportMetric, residentPanel } from './overview.js?v=overview-2';
+import { dashboardHeader, localClock, metric, overviewAnalytics, overviewPlots, reportMetric, residentPanel } from './overview.js?v=mic-feed-1';
 let overviewPeriod = 'Today';
 import { requestApi, watchResource, setToken, config } from './api.js?v=signal-1';
 import { defaults, migrateSettings, validateSettings, classify, nodes } from './model.js?v=two-stations-1';
@@ -13,6 +13,7 @@ const routes = [['overview', 'Overview', 'grid'], ['map', 'Monitoring map', 'pin
 function saved(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } }
 const state = { settings: migrateSettings(saved('sanaris-settings', defaults)), session: null, sessionError: '', samples: [], unavailable: false, complaints: [], loading: true, error: '', selected: 'ESP-02', range: 60, nodeFilter: 'All', levelFilter: 'All', search: '', statusFilter: 'All', acknowledged: new Set(), pending: null };
 state.stationDetails = [];
+state.telemetryHistory = [];
 state.detailsOpen = false;
 let map, reports, sensorTimer, sensorAbort, sensorVersion = 0;
 const page = () => location.hash.split('/')[2] || 'overview';
@@ -74,7 +75,7 @@ function endSession(message = '') {
   clearTimeout(sensorTimer); sensorAbort?.abort(); sensorVersion++;
   setToken(''); state.session = { ...state.session, authenticated: false }; state.sessionError = message;
   state.complaints = []; state.samples = []; state.loading = true; state.error = '';
-  state.stationDetails = []; state.detailsOpen = false;
+  state.stationDetails = []; state.telemetryHistory = []; state.detailsOpen = false;
   state.acknowledged.clear();
   login();
 }
@@ -90,7 +91,8 @@ function stationCards() { return readings().map(node => {
   const details = state.stationDetails.find(item => item.nodeId === node.id);
   const online = node.status === 'Recent' || detailIsRecent(details, Date.now(), state.unavailable);
   const status = online ? 'Online' : has || details ? 'Last received' : 'Planned';
-  return `<button class="node-card ${state.selected === node.id ? 'selected' : ''}" data-node="${node.id}" aria-pressed="${state.selected === node.id}" aria-controls="station-detail-host" aria-expanded="${state.detailsOpen && state.selected === node.id}"><div class="row between"><span class="node-icon">${icon('sound', 20)}</span>${badge(status)}</div><p class="small muted node-id">${node.id}</p><h3>${node.name}</h3><div class="reading">${has ? `${node.db.toFixed(1)} <span>dB(A)</span>` : '—'}</div><p class="small muted">${has ? e(level + ' · ' + dateTime(node.timestamp)) : details ? 'dBA measurement unavailable' : 'Awaiting sensor data'}</p><div class="row between small muted"><span>${node.area}</span>${icon('arrow', 16)}</div></button>`;
+  const mic = Number.isFinite(details?.microphoneDbfs) ? details.microphoneDbfs : null;
+  return `<button class="node-card ${state.selected === node.id ? 'selected' : ''}" data-node="${node.id}" aria-pressed="${state.selected === node.id}" aria-controls="station-detail-host" aria-expanded="${state.detailsOpen && state.selected === node.id}"><div class="row between"><span class="node-icon">${icon('sound', 20)}</span>${badge(status)}</div><p class="small muted node-id">${node.id}</p><h3>${node.name}</h3><div class="reading">${has ? `${node.db.toFixed(1)} <span>dB(A)</span>` : mic !== null ? `${mic.toFixed(1)} <span>dBFS</span>` : '—'}</div><p class="small muted">${has ? e(level + ' · ' + dateTime(node.timestamp)) : mic !== null ? 'Uncalibrated microphone level · dBA unavailable' : details ? 'dBA measurement unavailable' : 'Awaiting sensor data'}</p><div class="row between small muted"><span>${node.area}</span>${icon('arrow', 16)}</div></button>`;
 }).join(''); }
 function stats() {
   const recent = readings().filter(node => node.status === 'Recent');
@@ -181,6 +183,9 @@ function startSensors() {
       const details = parseStationDetails(payload, now);
       state.samples = mergeReadings(state.samples, samples);
       state.stationDetails = mergeStationDetails(state.stationDetails, details);
+      const history = new Map((state.telemetryHistory || []).map(item => [item.nodeId + ':' + item.measuredAt, item]));
+      for (const detail of details) history.set(detail.nodeId + ':' + detail.measuredAt, detail);
+      state.telemetryHistory = [...history.values()].sort((a, b) => a.measuredAt - b.measuredAt).slice(-1440);
       state.unavailable = false;
     }
     catch { if (version !== sensorVersion) return; state.unavailable = true; }
