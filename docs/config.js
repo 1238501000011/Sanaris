@@ -6,5 +6,5 @@ export const config = {
   // Used on hosted websites; localhost continues using the local Node server.
   cloudApiBase: 'https://uyhqnvpzrfdshzcbhiha.supabase.co/functions/v1/sanaris-api/',
   googleMapsApiKey: '', // Optional browser key restricted to your website URLs.
-  sensorFeedPath: 'https://YOUR_PROJECT.supabase.co/functions/v1/sanaris-telemetry',  // Optional /api/admin/readings endpoint on the backend.
+  sensorFeedPath: 'https://uyhqnvpzrfdshzcbhiha.supabase.co/functions/v1/sanaris-telemetry',  // Optional /api/admin/readings endpoint on the backend.
 };
