@@ -61,7 +61,7 @@ export function periodStart(period, now = Date.now()) {
   return day.getTime() - offset;
 }
 
-function microphoneChart(items) {
+export function microphoneChart(items) {
   const values = items.slice(-100);
   const width = 640, height = 260, left = 55, right = 18, top = 25, bottom = 42;
   const low = Math.floor(Math.min(...values.map(item => item.microphoneDbfs)) / 10) * 10 - 10;
@@ -84,7 +84,7 @@ function microphoneChart(items) {
     </svg><p class="small muted">Uncalibrated digital audio level. Not dBA; no disturbance thresholds are applied.</p></div>`;
 }
 
-function soundCategories(items) {
+export function soundCategories(items) {
   const counts = new Map();
   for (const item of items) {
     if (typeof item.detectedSound !== 'string' || !item.detectedSound.trim()) continue;
