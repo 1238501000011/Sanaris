@@ -1,6 +1,6 @@
 import { dashboardHeader, localClock, metric, overviewAnalytics, overviewPlots, reportMetric, residentPanel, microphoneChart, soundCategories } from './overview.js?v=analytics-mic-2';
 let overviewPeriod = 'Today';
-import { requestApi, watchResource, setToken, config } from './api.js?v=signal-1';
+import { requestApi, watchResource, setToken, config } from './api.js?v=session-restore-1';
 import { defaults, migrateSettings, validateSettings, classify, nodes } from './model.js?v=two-stations-1';
 import { parseReadings, mergeReadings, stationReadings } from './telemetry.js?v=two-stations-1';
 import { escapeHTML as e, icon, brand, heading, panel, badge, empty, notice, field, downloadText, dateTime } from './ui.js?v=signal-1';
@@ -81,7 +81,14 @@ function endSession(message = '') {
 }
 async function checkSession() {
   try { state.session = await requestApi('/api/admin/session'); state.sessionError = ''; }
-  catch (error) { state.session = null; state.sessionError = error.message; }
+  catch (error) {
+    state.session = null; state.sessionError = error.message;
+    if (error.status === 401 || error.status === 403) {
+      // The rejected token was cleared. Recover the backend's login mode.
+      try { state.session = await requestApi('/api/admin/session'); }
+      catch (retryError) { state.sessionError = retryError.message; }
+    }
+  }
   if (state.session?.authenticated) openWorkspace(); else login();
 }
 function summary() { return `<div class="assessment-summary"><div><strong>Noise classification</strong><p>Low: below ${state.settings.moderate} · Moderate: ${state.settings.moderate} to below ${state.settings.high} · High: ${state.settings.high}+ dB(A).</p></div><div><strong>Nighttime assessment: not available</strong><p>Requires eight hours of calibrated measurements.</p></div><a href="#/admin/settings">View guidance & settings →</a></div>`; }
@@ -275,4 +282,4 @@ root.addEventListener('change', async event => {
 window.addEventListener('hashchange', () => { renderPage(); window.scrollTo(0, 0); });
 window.addEventListener('pagehide', () => { reports?.stop(); sensorVersion++; clearTimeout(sensorTimer); sensorAbort?.abort(); map?.destroy(); });
 setInterval(() => { put('dashboard-time', localClock()); if (state.samples.length || state.stationDetails.length) refreshLive(); }, 10000);
-login(); checkSession();
+checkSession();

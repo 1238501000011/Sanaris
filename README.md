@@ -76,7 +76,7 @@ export const config = {
 
 This file is downloadable by visitors. Put only the API address and public browser settings here. Admin passwords, gateway keys, and database credentials belong exclusively on the backend.
 
-The admin uses a bearer session held in memory for cross-origin requests; it is never put in localStorage or a URL. Reloading a GitHub Pages admin tab requires signing in again. Same-origin local hosting also supports an HttpOnly session cookie. Reports are checked every five seconds, with server events when available on the same origin. Public tracking returns only a reference, status, and status-history dates, not complaint details.
+The admin retains its bearer access token in tab-scoped sessionStorage for cross-origin requests. Refreshing restores the token and asks the server to validate it. Sign-out, authorization rejection or expiry ends access. If browser storage is blocked, sign-in works in memory and a reload requires signing in again. Same-origin local hosting also supports an HttpOnly session cookie. Reports are checked every five seconds, with server events when available on the same origin. Public tracking returns only a reference, status, and status-history dates, not complaint details.
 
 ### 3. Publish the frontend when ready
 

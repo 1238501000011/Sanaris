@@ -53,8 +53,11 @@ self-registration grants membership. The local SQLite password remains unchanged
 - Reports refresh every five seconds. Residents need no account; retain the
   randomly generated reference number to track progress. Tracking exposes status
   and timestamps only, not location or description.
-- Auth tokens stay in memory. Refreshing the page or expiration requires signing
-  in again. Logout records a token hash that prevents replay through this API.
+- Access tokens are retained in tab-scoped session storage and revalidated by the
+  backend on reload. Sign-out, authorization rejection or expiry ends access.
+  Storage is scoped to the current browser tab session. If browser storage is blocked,
+  sign-in works in memory and a reload requires signing in again.
+  Logout records a token hash that prevents replay through this API.
   No refresh token is returned to the browser.
 - Tables have RLS and no browser-role grants/policies: browser access is denied.
   The service-only RPC runs as SECURITY INVOKER. Supabase's informational

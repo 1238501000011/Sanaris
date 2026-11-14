@@ -1,7 +1,21 @@
 import { config } from '../../config.js?v=signal-1';
 export { config };
-let token = '';
-export function setToken(value) { token = typeof value === 'string' ? value : ''; }
+// Keep the current tab's access token across reloads. The server validates it.
+function sessionKey() {
+  return 'sanaris-admin-session:' + apiUrl('/api/admin/session').href;
+}
+function restoreToken() {
+  try { return sessionStorage.getItem(sessionKey()) || ''; }
+  catch { return ''; }
+}
+let token = restoreToken();
+export function setToken(value) {
+  token = typeof value === 'string' ? value : '';
+  try {
+    if (token) sessionStorage.setItem(sessionKey(), token);
+    else sessionStorage.removeItem(sessionKey());
+  } catch { /* Sign-in still works when browser storage is unavailable. */ }
+}
 export function apiUrl(path) {
   const local = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
   const configured = config.apiBase?.trim() || (!local ? config.cloudApiBase?.trim() : '');
@@ -12,19 +26,26 @@ export function apiUrl(path) {
 }
 export async function requestApi(path, { method = 'GET', body, key, signal } = {}) {
   const url = apiUrl(path);
+  const adminRequest = /\/api\/admin\//.test(url.pathname);
+  const authenticatedRequest = adminRequest || (config.sensorFeedPath && path === config.sensorFeedPath);
+  const requestToken = token;
   let response;
   try {
     response = await fetch(url, { method, mode: 'cors', credentials: url.origin === location.origin ? 'same-origin' : 'omit', cache: 'no-store', redirect: 'error',
-      headers: { Accept: 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}), ...(key ? { 'Idempotency-Key': key } : {}), ...(/\/admin\/(login|setup)$/.test(path) ? { 'X-SANARIS-Auth': 'bearer' } : {}) },
+      headers: { Accept: 'application/json', ...(authenticatedRequest && requestToken ? { Authorization: `Bearer ${requestToken}` } : {}), ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}), ...(key ? { 'Idempotency-Key': key } : {}), ...(/\/admin\/(login|setup)$/.test(path) ? { 'X-SANARIS-Auth': 'bearer' } : {}) },
       body: body !== undefined ? JSON.stringify(body) : undefined,
       signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(15000)]) : AbortSignal.timeout(15000),
     });
   } catch (error) { if (signal?.aborted) throw error; throw new Error('Cannot reach the report service. Please try again.'); }
   const data = await response.json().catch(() => null);
-  if (!response.ok || data === null) { const error = new Error(data?.error || 'The report service is unavailable. Please try again.'); error.status = response.status; throw error; }
+  if (!response.ok || data === null) {
+    if (adminRequest && [401, 403].includes(response.status) && token === requestToken) setToken('');
+    const error = new Error(data?.error || 'The report service is unavailable. Please try again.'); error.status = response.status; throw error;
+  }
+  if (adminRequest && token === requestToken && (path === '/api/admin/logout' || (path === '/api/admin/session' && data.authenticated === false))) setToken('');
   return data;
 }
-// Bearer credentials stay in memory, never in a URL or browser storage.
+// Passwords are never persisted. Logout and rejected sessions clear the saved token.
 // Polling also works when GitHub Pages and the API are on different domains.
 export function watchResource(path, onData, onError) {
   let active = true, busy = false, queued = false, events;
